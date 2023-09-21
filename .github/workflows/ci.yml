@@ -1,0 +1,20 @@
+name: CI
+on: push
+
+jobs:
+  all:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install packages
+      run: |
+        sudo make install
+        sudo make setup
+    - name: Compile emulator
+      run: cd build && rm -rf ./* && cmake .. -DEMU=1 && make -j4
+    - name: Compile Zybo
+      run: cd build && rm -rf ./* && cmake .. && make -j4
+    - name: Check C/C++ formatting
+      run: ./format.py --check --all
+    - name: Run check_and_zip.py
+      run: ./check_and_zip.py lab1
