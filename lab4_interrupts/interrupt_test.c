@@ -35,10 +35,10 @@ static void timer1_isr() {
 
 //No error here
 static void timer2_isr() {
-    printf("HEYOOOOOO Acknowledge timer2 interrupt!\n");
+    printf("Acknowledge timer2 interrupt!\n");
 
     // Acknowledge timer interrupt
-    intervalTimer_ackInterrupt(INTERVAL_TIMER_1_INTERRUPT_IRQ);
+    intervalTimer_ackInterrupt(INTERVAL_TIMER_2_INTERRUPT_IRQ);
 
     //Flips the bit with the xor bit operator
     leds_write(leds_read()^LED_BIT_THREE);
@@ -71,39 +71,30 @@ void interrupt_test_run(){
     //interrupts_irq_enable command was overwriting previous enables 
     //(turning off other interupts) which was causing them to stop working.
 
-    // //Timer 0 - 10Hz (.1 seconds)
-    // interrupts_register(INTERVAL_TIMER_0_INTERRUPT_IRQ, timer0_isr);
-    // interrupts_irq_enable(INTERVAL_TIMER_0_INTERRUPT_IRQ);
+    //Timer 0 - 10Hz (.1 seconds)
+    interrupts_register(INTERVAL_TIMER_0_INTERRUPT_IRQ, timer0_isr);
+    interrupts_irq_enable(INTERVAL_TIMER_0_INTERRUPT_IRQ);
 
-    // intervalTimer_initCountDown(INTERVAL_TIMER_0, TEN_HZ_INTERRUPT);
-    // intervalTimer_enableInterrupt(INTERVAL_TIMER_0);
-    // intervalTimer_start(INTERVAL_TIMER_0);
+    intervalTimer_initCountDown(INTERVAL_TIMER_0, TEN_HZ_INTERRUPT);
+    intervalTimer_enableInterrupt(INTERVAL_TIMER_0);
+    intervalTimer_start(INTERVAL_TIMER_0);
     
 
-    // // //Timer 1 - 1Hz (1 second)
-    // interrupts_register(INTERVAL_TIMER_1_INTERRUPT_IRQ, timer1_isr);
-    // interrupts_irq_enable(INTERVAL_TIMER_1_INTERRUPT_IRQ);
+    // //Timer 1 - 1Hz (1 second)
+    interrupts_register(INTERVAL_TIMER_1_INTERRUPT_IRQ, timer1_isr);
+    interrupts_irq_enable(INTERVAL_TIMER_1_INTERRUPT_IRQ);
 
-    // intervalTimer_initCountDown(INTERVAL_TIMER_1, ONE_HZ_INTERRUPT);
-    // intervalTimer_enableInterrupt(INTERVAL_TIMER_1);
-    // intervalTimer_start(INTERVAL_TIMER_1);
+    intervalTimer_initCountDown(INTERVAL_TIMER_1, ONE_HZ_INTERRUPT);
+    intervalTimer_enableInterrupt(INTERVAL_TIMER_1);
+    intervalTimer_start(INTERVAL_TIMER_1);
 
     //Timer 2 - .1Hz (10 second delay)
-    printf("Here 1\n");
     interrupts_register(INTERVAL_TIMER_2_INTERRUPT_IRQ, timer2_isr);
-    printf("Here 2\n");
     interrupts_irq_enable(INTERVAL_TIMER_2_INTERRUPT_IRQ);
-    printf("Here 3\n");
 
-    intervalTimer_initCountDown(INTERVAL_TIMER_2, ONE_HZ_INTERRUPT);
-    printf("Here 4\n");
+    intervalTimer_initCountDown(INTERVAL_TIMER_2, TENTH_HZ_INTERRUPT);
     intervalTimer_enableInterrupt(INTERVAL_TIMER_2);
-    printf("Here 5\n");
-    intervalTimer_start(INTERVAL_TIMER_1);
-    printf("Here 6\n");
-
-
-    
+    intervalTimer_start(INTERVAL_TIMER_2);
 
     while (1)
     ;

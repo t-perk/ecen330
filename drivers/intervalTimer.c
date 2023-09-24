@@ -77,7 +77,6 @@ void intervalTimer_initCountUp(uint32_t timerNumber){
 // 3. Call the _reload function to move the LOAD values into the Counters
 void intervalTimer_initCountDown(uint32_t timerNumber, double period){
     //Initialize the timer registers and enable cascade mode.
-    // initializeCounter(timerNumber);
 
     //Step 1
     writeRegister(timerNumber,0,0);//write a 0 to the TCSR0 register.
@@ -91,6 +90,7 @@ void intervalTimer_initCountDown(uint32_t timerNumber, double period){
     //set the CASC bit to 1 and the UDT0 bit to 1 in the TCSR0 and the ARHT bit to 1
     //register (cascade mode and down counting).
     timerData = timerData | CASC_BIT_OFFSET | UDT0_BIT_OFFSET | ARHT_OFFSET;
+    printf("initCountDown - timerData: %d\n", timerData);
 
     writeRegister(timerNumber,0,timerData);
 
@@ -118,8 +118,10 @@ void intervalTimer_initCountDown(uint32_t timerNumber, double period){
 // the other bits.
 void intervalTimer_start(uint32_t timerNumber){
     uint32_t timerData = readRegister(timerNumber,0);
+    printf("start - timerData: %d\n", timerData);
     timerData = timerData | (ENABLE_TIMER_BIT);//Enable the timer
 
+    printf("start - timerData: %d\n", timerData);
     writeRegister(timerNumber, 0, timerData);
 }
 
@@ -152,6 +154,8 @@ void intervalTimer_reload(uint32_t timerNumber){
     writeRegister(timerNumber,0,timerData);
 
     timerData = timerData & ~(LOAD_BIT);//Turn off load bit
+
+    printf("reload - timerData: %d\n", timerData);
 
     //Disable the load bit
     writeRegister(timerNumber,0,timerData);
@@ -186,6 +190,8 @@ void intervalTimer_enableInterrupt(uint8_t timerNumber){
 
     //set the ENIT bit to 1 in the TCSR0 register (enable interrupt).
     TCSRData = TCSRData | ENIT_OFFSET;
+
+    printf("intervalTimer - TCSRData: %d\n", TCSRData);
 
     writeRegister(timerNumber,0,TCSRData);
 }

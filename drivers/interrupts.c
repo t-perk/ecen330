@@ -104,7 +104,7 @@ static void interrupts_isr() {
 
     //Three timers. Three interrupts
     //Loop through each interrupt input
-    for (i = 0; i < 2; i++){
+    for (i = 0; i < 3; i++){
         uint32_t inputPendingRegister = readRegister(INPUT_PENDING_REGISTER_OFFSET);
 
         //Check if it has an interrupt pending
