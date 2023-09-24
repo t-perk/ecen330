@@ -57,30 +57,16 @@ void interrupts_init(){
 // input is active, fcn will be called.
 void interrupts_register(uint8_t irq, void (*fcn)()){
     //Register a function that is specific to a given interrupt.
-
-    printf("Registering irq: %d\n", irq);
     isrFcnPtrs[irq] = fcn;
 }
 
 // Enable single input interrupt line, given by irq number.
 void interrupts_irq_enable(uint8_t irq){
-    // uint32_t currentIER = readRegister(INTERRUPT_ENABLE_REGISTER_OFFSET);
-    // uint32_t newIER = currentIER | irq;
-    // printf("Current interrupt enable register reads: %d\n", newIER);
-
-    // writeRegister(INTERRUPT_ENABLE_REGISTER_OFFSET, newIER);
     writeRegister(SET_INTERRUPT_ENABLED_OFFSET, 1<<irq);
-
-    printf("IER: %d\n", readRegister(INTERRUPT_ENABLE_REGISTER_OFFSET));
 }
 
 // Disable single input interrupt line, given by irq number.
 void interrupts_irq_disable(uint8_t irq){
-    // uint32_t currentIER = readRegister(INTERRUPT_ENABLE_REGISTER_OFFSET);
-    // uint32_t newIER = currentIER | irq;
-    // printf("Current interrupt enable register reads: %x\n");
-
-
     writeRegister(CLEAR_INTERRUPT_ENABLED_OFFSET, 1<<irq);
 }
 
@@ -118,8 +104,6 @@ static void interrupts_isr() {
                 //Call the callback function
                 isrFcnPtrs[i]();
             }
-
-            printf("Acknowledging in interrupts.c for %d\n", i);
             writeRegister(INTERRUPT_ACKNOWLEDGE_REGISTER_OFFSET, 1 << i);
         }
     }

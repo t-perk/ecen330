@@ -9,39 +9,35 @@
 #define ONE_HZ_INTERRUPT 1  //Should fire every 1 second
 #define TENTH_HZ_INTERRUPT 10//Should fire every 10 seconds
 
-#define LED_BIT_ONE 0x01
-#define LED_BIT_TWO 0x02
-#define LED_BIT_THREE 0x04
+#define LED_0_BIT 0x01
+#define LED_1_BIT 0x02
+#define LED_2_BIT 0x04
 
+//toggle LED_BIT_0 every INTERVAL_TIMER_0_INTERRUPT_IRQ
 static void timer0_isr() {
-    printf("Acknowledge timer0 interrupt!\n");
-
     // Acknowledge timer interrupt
     intervalTimer_ackInterrupt(INTERVAL_TIMER_0_INTERRUPT_IRQ);
 
     //Flips the bit with the xor bit operator
-    leds_write(leds_read()^LED_BIT_ONE);
+    leds_write(leds_read()^LED_0_BIT);
 }
 
+//toggle LED_BIT_1 every INTERVAL_TIMER_1_INTERRUPT_IRQ
 static void timer1_isr() {
-    printf("Acknowledge timer1 interrupt!\n");
-
     // Acknowledge timer interrupt
     intervalTimer_ackInterrupt(INTERVAL_TIMER_1_INTERRUPT_IRQ);
 
     //Flips the bit with the xor bit operator
-    leds_write(leds_read()^LED_BIT_TWO);
+    leds_write(leds_read()^LED_1_BIT);
 }
 
-//No error here
+//toggle LED_BIT_2 every INTERVAL_TIMER_2_INTERRUPT_IRQ
 static void timer2_isr() {
-    printf("Acknowledge timer2 interrupt!\n");
-
     // Acknowledge timer interrupt
     intervalTimer_ackInterrupt(INTERVAL_TIMER_2_INTERRUPT_IRQ);
 
     //Flips the bit with the xor bit operator
-    leds_write(leds_read()^LED_BIT_THREE);
+    leds_write(leds_read()^LED_2_BIT);
 }
 
 /*
@@ -71,7 +67,7 @@ void interrupt_test_run(){
     //interrupts_irq_enable command was overwriting previous enables 
     //(turning off other interupts) which was causing them to stop working.
 
-    //Timer 0 - 10Hz (.1 seconds)
+    //Initialize Timer 0 - 10Hz (.1 seconds)
     interrupts_register(INTERVAL_TIMER_0_INTERRUPT_IRQ, timer0_isr);
     interrupts_irq_enable(INTERVAL_TIMER_0_INTERRUPT_IRQ);
 
@@ -80,7 +76,7 @@ void interrupt_test_run(){
     intervalTimer_start(INTERVAL_TIMER_0);
     
 
-    // //Timer 1 - 1Hz (1 second)
+    //Initialize Timer 1 - 1Hz (1 second)
     interrupts_register(INTERVAL_TIMER_1_INTERRUPT_IRQ, timer1_isr);
     interrupts_irq_enable(INTERVAL_TIMER_1_INTERRUPT_IRQ);
 
@@ -88,7 +84,7 @@ void interrupt_test_run(){
     intervalTimer_enableInterrupt(INTERVAL_TIMER_1);
     intervalTimer_start(INTERVAL_TIMER_1);
 
-    //Timer 2 - .1Hz (10 second delay)
+    //Initialize Timer 2 - .1Hz (10 second delay)
     interrupts_register(INTERVAL_TIMER_2_INTERRUPT_IRQ, timer2_isr);
     interrupts_irq_enable(INTERVAL_TIMER_2_INTERRUPT_IRQ);
 
