@@ -221,12 +221,14 @@ static uint32_t readRegister(uint8_t timerNumber, uint32_t offset){
     } else if (timerNumber == TIMER_ONE){
         return Xil_In32(XPAR_AXI_TIMER_1_BASEADDR + offset);
     } else if (timerNumber == TIMER_TWO){
-        return Xil_In32(XPAR_AXI_TIMER_1_BASEADDR + offset);
+        return Xil_In32(XPAR_AXI_TIMER_2_BASEADDR + offset);
     }
 }
 
 //helper function for writing to device registers
 static void writeRegister(uint8_t timerNumber, uint32_t offset, uint32_t value){
+    printf("Writing to: %d\n", timerNumber);
+
     if (timerNumber == TIMER_ZERO){
         Xil_Out32(XPAR_AXI_TIMER_0_BASEADDR + offset, value);
     } else if (timerNumber == TIMER_ONE){
