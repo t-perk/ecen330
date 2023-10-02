@@ -3,6 +3,7 @@
 #include "intervalTimer.h"
 #include "xil_io.h"
 #include "stdio.h"
+#include "armInterrupts.h"
 
 #define INPUT_PENDING_REGISTER_OFFSET 0x04
 #define INTERRUPT_ENABLE_REGISTER_OFFSET 0x08
@@ -11,6 +12,7 @@
 #define CLEAR_INTERRUPT_ENABLED_OFFSET 0x14
 #define MER_OFFSET 0x1C
 #define MER_BITSON 0x03
+#define TIMER_INDICATOR 3
 
 //helper function created to check whether there's a pending input for
 //a given interrupt. If there is, we call it's coresponding callback
@@ -90,7 +92,7 @@ static void interrupts_isr() {
 
     //Three timers. Three interrupts
     //Loop through each interrupt input
-    for (i = 0; i < 3; i++){
+    for (i = 0; i < TIMER_INDICATOR; i++){
         uint32_t inputPendingRegister = readRegister(INPUT_PENDING_REGISTER_OFFSET);
 
         //Check if it has an interrupt pending
