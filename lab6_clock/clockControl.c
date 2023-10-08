@@ -15,11 +15,11 @@
 #define UPDATE_NUM_TICKS_TIME 0.1
 
 // All printed messages for states are provided here.
-#define INIT_ST_MSG "init_st\n"
-#define WAITING_ST_MSG "waiting_st\n"
-#define LONG_PRESS_DELAY_ST_MSG "long_press_delay_st\n"
-#define INC_DEC_ST_MSG "inc_dec_st\n"
-#define FAST_UPDATE_ST_MSG "fast_update_st\n"
+#define INIT_ST_MSG "clock_init_st\n"
+#define WAITING_ST_MSG "clock_waiting_st\n"
+#define LONG_PRESS_DELAY_ST_MSG "clock_long_press_delay_st\n"
+#define INC_DEC_ST_MSG "clock_inc_dec_st\n"
+#define FAST_UPDATE_ST_MSG "clock_fast_update_st\n"
 
 uint32_t delay_cnt = 0;
 uint32_t update_cnt = 0;
@@ -144,9 +144,12 @@ void clockControl_tick(){
             }
             break;
 
+        //Note: I changed this part slightly from the given state machine
+        //because I saw that touchscreen status was dipping into idle after
+        //being released for a second. This likely has something to do with
+        //how I setup my touchscreen driver code.
         case inc_dec_st:
-            if (touchscreen_get_status() == TOUCHSCREEN_RELEASED){
-                printf("IT WAS RELEASE.\n");
+            if (!(touchscreen_get_status() == TOUCHSCREEN_PRESSED)){
                 touchscreen_ack_touch();
                 currentState = waiting_st;
             }

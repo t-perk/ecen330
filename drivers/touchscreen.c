@@ -162,7 +162,7 @@ touchscreen_status_t touchscreen_get_status(){
 // switch to the TOUCHSCREEN_IDLE status.
 void touchscreen_ack_touch(){
     pressed = false;
-    currentTouchscreenStatus = TOUCHSCREEN_IDLE;//Necessary?
+    currentTouchscreenStatus = TOUCHSCREEN_IDLE;
 
 }
 
