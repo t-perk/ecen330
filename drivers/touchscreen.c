@@ -81,7 +81,7 @@ void debugStatePrint() {
 // Tick the touchscreen driver state machine
 void touchscreen_tick(){
     //Debug function
-    debugStatePrint();
+    // debugStatePrint();
         
         //Handle transitions
         switch(currentState){
@@ -162,6 +162,8 @@ touchscreen_status_t touchscreen_get_status(){
 // switch to the TOUCHSCREEN_IDLE status.
 void touchscreen_ack_touch(){
     pressed = false;
+    currentTouchscreenStatus = TOUCHSCREEN_IDLE;//Necessary?
+
 }
 
 // Get the (x,y) location of the last touchscreen touch
