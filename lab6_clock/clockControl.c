@@ -21,6 +21,7 @@
 #define INC_DEC_ST_MSG "clock_inc_dec_st\n"
 #define FAST_UPDATE_ST_MSG "clock_fast_update_st\n"
 
+//Declare variables
 uint32_t delay_cnt = 0;
 uint32_t update_cnt = 0;
 uint32_t delay_num_ticks = 0;
@@ -127,7 +128,10 @@ void clockControl_tick(){
                 currentState = long_press_delay_st;
             }
             break;
-
+        //If the button still hasn't been released and we've hit the
+        //update_num_ticks counter, then increment and reset the timer
+        //If button is released, go back to waiting
+        //Otherwise stay in the state
         case fast_update_st:
             if (!(touchscreen_get_status() == TOUCHSCREEN_RELEASED) && (update_cnt == update_num_ticks)){
                 update_cnt = 0;
@@ -164,12 +168,15 @@ void clockControl_tick(){
             break;
         case waiting_st:
             break;
+        //Increment the timer for the long_press_delay function
         case long_press_delay_st:
             delay_cnt++;
             break;
+        //Increment the timer for the update_cnt function
         case fast_update_st:
             update_cnt++;
             break;
+        //Increment the timer based on where the user pressed
         case inc_dec_st:
             clockDisplay_performIncDec(touchscreen_get_location());
             break;
