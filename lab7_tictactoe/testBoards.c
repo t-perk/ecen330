@@ -83,7 +83,7 @@ void testBoards() {
 
   move = minimax_computeNextMove(&board1, is_Xs_turn);
   printf("next move for board1: (%d, %d)\n", move.row, move.column);
-
+  return;
   move = minimax_computeNextMove(&board2, is_Xs_turn);
   printf("next move for board2: (%d, %d)\n", move.row, move.column);
 
