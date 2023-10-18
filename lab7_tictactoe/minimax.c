@@ -38,8 +38,9 @@ minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn,
   // minimax_isGameOver(minimax_computeBoardScore(board, is_Xs_turn));
   // printf("checkIsGameOver: %d\n", checkIsGameOver);
 
-  if (minimax_isGameOver(minimax_computeBoardScore(board, is_Xs_turn))) {
+  if (minimax_isGameOver(minimax_computeBoardScore(board, !is_Xs_turn))) {
     // The & is passing the address of the board.
+    printf("game over condition met\n");
     return minimax_computeBoardScore(board,
                                      !is_Xs_turn); // Might need to use a &board
   } else {
@@ -121,8 +122,22 @@ minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn,
 tictactoe_location_t minimax_computeNextMove(tictactoe_board_t *board,
                                              bool is_Xs_turn) {
   printf("\n\nIn minimax_computeNextMove\n");
+  //Clear out the moveScore table.
+  minimax_initBoard(board);
+
   uint8_t depth = 0;
   minimax(board, is_Xs_turn, depth);
+
+  //Search through the moveScoreTable and get the move corresponding to the max/min score to turn
+  for (uint8_t i = 0; i < NUM_POSSIBLE_MOVES; i++) {
+
+    int8_t scoreToLookFor = is_Xs_turn ? MINIMAX_X_WINNING_SCORE : MINIMAX_O_WINNING_SCORE;
+
+    if (moveScoreTable[i].scoreInformation == scoreToLookFor){
+        printf("Matching score found, returning it's location!\n");
+        return moveScoreTable[i].moveLocation;
+    }
+  }
 }
 
 void displayBoard(tictactoe_board_t *board) {
@@ -152,6 +167,7 @@ minimax_score_t minimax_computeBoardScore(tictactoe_board_t *board,
                                           bool is_Xs_turn) {
 
   printf("in minimax_computerBoardScore\n");
+  displayBoard(board);
 
   tictactoe_square_state_t charToLookFor =
       is_Xs_turn ? MINIMAX_X_SQUARE : MINIMAX_O_SQUARE;
