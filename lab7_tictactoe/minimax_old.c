@@ -1,7 +1,6 @@
 #include "minimax.h"
 #include "ticTacToe.h"
 #include <stdio.h>
-//New
 
 // Question. Is there any benefit to defining these variables in my init
 // function vs. right here?
