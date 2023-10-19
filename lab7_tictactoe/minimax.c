@@ -8,7 +8,7 @@
 uint8_t currRow = 0;
 uint8_t currColumn = 0;
 
-#define NUM_POSSIBLE_MOVES 8 // 9-1
+#define NUM_POSSIBLE_MOVES 9 // 9-1
 
 struct MoveInfo {
   tictactoe_location_t moveLocation;
@@ -38,11 +38,12 @@ minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn,
   // minimax_isGameOver(minimax_computeBoardScore(board, is_Xs_turn));
   // printf("checkIsGameOver: %d\n", checkIsGameOver);
 
-  if (minimax_isGameOver(minimax_computeBoardScore(board, !is_Xs_turn))) {
+  uint8_t myScore = minimax_computeBoardScore(board, !is_Xs_turn);
+
+  if (minimax_isGameOver(myScore)) {
     // The & is passing the address of the board.
     printf("game over condition met\n");
-    return minimax_computeBoardScore(board,
-                                     !is_Xs_turn); // Might need to use a &board
+    return myScore; // Might need to use a &board
   } else {
     printf("Game is not over. Continuing on\n\n");
   }
@@ -103,7 +104,16 @@ minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn,
     }
   }
 
+  printf("Chosen row is going to be:%d, %d\n", choice.row, choice.column);
+
   return chosenScore;
+}
+
+void displayMoveScoreTable(){
+  for (uint8_t i = 0; i < NUM_POSSIBLE_MOVES; i++) {
+    
+    printf("Entry: %d with move of: (%d,%d) and score of: %d.\n\n\n", i, moveScoreTable[i].moveLocation.row, moveScoreTable[i].moveLocation.column, moveScoreTable[i].scoreInformation);
+  }
 }
 
 // This routine is not recursive but will invoke the recursive minimax function.
@@ -128,10 +138,13 @@ tictactoe_location_t minimax_computeNextMove(tictactoe_board_t *board,
   uint8_t depth = 0;
   minimax(board, is_Xs_turn, depth);
 
+  int8_t scoreToLookFor = is_Xs_turn ? MINIMAX_X_WINNING_SCORE : MINIMAX_O_WINNING_SCORE;
+  displayMoveScoreTable();
+
   //Search through the moveScoreTable and get the move corresponding to the max/min score to turn
   for (uint8_t i = 0; i < NUM_POSSIBLE_MOVES; i++) {
-
-    int8_t scoreToLookFor = is_Xs_turn ? MINIMAX_X_WINNING_SCORE : MINIMAX_O_WINNING_SCORE;
+    
+    printf("Move number: %d looking for score %d\n", i, scoreToLookFor);
 
     if (moveScoreTable[i].scoreInformation == scoreToLookFor){
         printf("Matching score found, returning it's location!\n");
