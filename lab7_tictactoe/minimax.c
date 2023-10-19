@@ -250,7 +250,7 @@ minimax_score_t minimax_computeBoardScore(tictactoe_board_t *board,
   printf("isBoardFilled: %d\n", isBoardFilled);
   printf("\n");
 
-  // check is there has been three in a row, column, or diagonal
+  // check is there has been three in a row, column, or diagonal.
 
   if (isRowComplete || isColumnComplete || isDiagonal) {
     switch (charToLookFor) {
