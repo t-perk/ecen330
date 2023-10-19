@@ -82,8 +82,8 @@ void testBoards() {
   bool is_Xs_turn = true;
 
   // Should be (1,1)
-  // move = minimax_computeNextMove(&board1, is_Xs_turn);
-  // printf("next move for board1: (%d, %d)\n", move.row, move.column);
+  move = minimax_computeNextMove(&board1, is_Xs_turn);
+  printf("next move for board1: (%d, %d)\n", move.row, move.column);
   
   // move = minimax_computeNextMove(&board2, is_Xs_turn);
   // printf("next move for board2: (%d, %d)\n", move.row, move.column);
@@ -94,6 +94,6 @@ void testBoards() {
   // move = minimax_computeNextMove(&board4, !is_Xs_turn);
   // printf("next move for board4: (%d, %d)\n", move.row, move.column);
 
-  move = minimax_computeNextMove(&board5, !is_Xs_turn);
-  printf("next move for board5: (%d, %d)\n", move.row, move.column);
+  // move = minimax_computeNextMove(&board5, !is_Xs_turn);
+  // printf("next move for board5: (%d, %d)\n", move.row, move.column);
 }

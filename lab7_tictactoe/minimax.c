@@ -1,13 +1,6 @@
 #include "minimax.h"
 #include "ticTacToe.h"
 #include <stdio.h>
-//New
-
-// Question. Is there any benefit to defining these variables in my init
-// function vs. right here?
-
-uint8_t currRow = 0;
-uint8_t currColumn = 0;
 
 #define NUM_POSSIBLE_MOVES 9
 
@@ -16,7 +9,7 @@ struct MoveInfo {
   minimax_score_t scoreInformation;
 };
 
-struct MoveInfo moveScoreTable[NUM_POSSIBLE_MOVES];
+// struct MoveInfo moveScoreTable[NUM_POSSIBLE_MOVES];
 
 //This is the variable that we use to get our desired move. 
 //Verify that this matches what you are returning in your computeNextMove
@@ -24,14 +17,16 @@ tictactoe_location_t choice;
 // Grab first value for comparison
 minimax_score_t chosenScore;
 
-// Define a multidimensional array with movelocation, score pairs
-
+//Function definitions
 minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn,
                         uint8_t depth);
 uint8_t getSquareIndex(uint8_t currRow, uint8_t currColumn);
 
-// Using the currRow an currColumn, getSquareIndex returns a unique int
-// corresponding to the the referenced square 0-8.
+
+/*getSquareIndex
+Using the currRow an currColumn, getSquareIndex returns a unique int
+corresponding to the the referenced square 0-8.
+*/ 
 uint8_t getSquareIndex(uint8_t currRow, uint8_t currColumn) {
   return ((currRow * 3) + (currColumn));
 }
@@ -41,18 +36,20 @@ minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn,
   printf("In minimax with Xs turn being %d and depth is %d\n", is_Xs_turn,
          depth);
 
-  // minimax_score_t checkIsGameOver =
-  // minimax_isGameOver(minimax_computeBoardScore(board, is_Xs_turn));
-  // printf("checkIsGameOver: %d\n", checkIsGameOver);
+  minimax_score_t currScore = minimax_computeBoardScore(board, is_Xs_turn);
+  struct MoveInfo myMoveScoreTable[NUM_POSSIBLE_MOVES];
 
-  if (minimax_isGameOver(minimax_computeBoardScore(board, !is_Xs_turn))) {
+  if (minimax_isGameOver(currScore)) {
     // The & is passing the address of the board.
     printf("game over condition met\n");
-    return minimax_computeBoardScore(board,
-                                     !is_Xs_turn); // Might need to use a &board
+    return currScore; // Might need to use a &board
   } else {
     printf("Game is not over. Continuing on\n\n");
   }
+
+  uint8_t currRow = 0;
+  uint8_t currColumn = 0;
+  uint8_t index = 0;
 
   // Loop through each row and then each column
   for (currRow = 0; currRow < TICTACTOE_BOARD_ROWS; currRow++) {
@@ -67,27 +64,21 @@ minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn,
         // Recursively call minimax to get the best score, assuming player
         // choses to play at this location.
         minimax_score_t score = minimax(board, !is_Xs_turn, ++depth);
-
-        // add score to move - score table;
-        // add move to move - score table;
-
-        // tictactoe_location_t moveLocation;
-        // moveLocation.column = currColumn;
-        // moveLocation.row = currRow;
+        ++index;//Used to put score in the table.
 
         // Get square index
-        uint8_t currIndex = getSquareIndex(currRow, currColumn);
+        // uint8_t currIndex = getSquareIndex(currRow, currColumn);
 
         printf("The ROW for this is: %d\n", currRow);
 
-        moveScoreTable[currIndex].moveLocation.column = currColumn;
-        moveScoreTable[currIndex].moveLocation.row = currRow;
-        moveScoreTable[currIndex].scoreInformation = score;//-depth;
+        myMoveScoreTable[index].moveLocation.column = currColumn;
+        myMoveScoreTable[index].moveLocation.row = currRow;
+        myMoveScoreTable[index].scoreInformation = score;
         //If it's x's turn we subtract the depth from the score.
         //If it's O's turn we add the depth to the score.
 
         // is_Xs_turn ? (moveScoreTable[currIndex].scoreInformation = score - depth) : (moveScoreTable[currIndex].scoreInformation = score + depth);
-        printf("Set score to %d for location (%d,%d)\n", moveScoreTable[currIndex].scoreInformation, moveScoreTable[currIndex].moveLocation.row, moveScoreTable[currIndex].moveLocation.column);
+        printf("Set score to %d for location (%d,%d)\n", myMoveScoreTable[index].scoreInformation, myMoveScoreTable[index].moveLocation.row, myMoveScoreTable[index].moveLocation.column);
 
         // Undo the change to the board
         (*board).squares[currRow][currColumn] = MINIMAX_EMPTY_SQUARE;
@@ -95,24 +86,23 @@ minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn,
     }
   }
   // Grab first value for comparison
-  tictactoe_location_t choice = moveScoreTable[0].moveLocation;
-  
-  minimax_score_t chosenScore = moveScoreTable[0].scoreInformation;
+  choice = myMoveScoreTable[0].moveLocation;
+  chosenScore = myMoveScoreTable[0].scoreInformation;
 
   if (is_Xs_turn) {
     for (uint8_t i = 0; i < NUM_POSSIBLE_MOVES; i++) {
       // Get the highest score with it's associated move
-      if (moveScoreTable[i].scoreInformation > chosenScore) {
-        chosenScore = moveScoreTable[i].scoreInformation;
-        choice = moveScoreTable[i].moveLocation;
+      if (myMoveScoreTable[i].scoreInformation > chosenScore) {
+        chosenScore = myMoveScoreTable[i].scoreInformation;
+        choice = myMoveScoreTable[i].moveLocation;
       }
     }
   } else {
     for (uint8_t i = 0; i < NUM_POSSIBLE_MOVES; i++) {
       // Get the highest score with it's associated move
-      if (moveScoreTable[i].scoreInformation < chosenScore) {
-        chosenScore = moveScoreTable[i].scoreInformation;
-        choice = moveScoreTable[i].moveLocation;
+      if (myMoveScoreTable[i].scoreInformation < chosenScore) {
+        chosenScore = myMoveScoreTable[i].scoreInformation;
+        choice = myMoveScoreTable[i].moveLocation;
       }
     }
   }
@@ -145,48 +135,50 @@ tictactoe_location_t minimax_computeNextMove(tictactoe_board_t *board,
   uint8_t depth = 0;
   minimax(board, is_Xs_turn, depth);
 
+  printf("Current move is (%d,%d)\n", choice.row, choice.column);
+  return choice;
+
   uint8_t baseScore = 0;
   int8_t scoreToLookFor = is_Xs_turn ? MINIMAX_X_WINNING_SCORE : MINIMAX_O_WINNING_SCORE;
 
   //Search through the moveScoreTable and get the move corresponding to the max/min score to turn
-  for (uint8_t i = 0; i < NUM_POSSIBLE_MOVES; i++) {
+  // for (uint8_t i = 0; i < NUM_POSSIBLE_MOVES; i++) {
 
-    switch(scoreToLookFor){
-      case MINIMAX_X_WINNING_SCORE:
-        printf("In Minimax_X case\n");
-        if (moveScoreTable[i].scoreInformation > baseScore){
-          baseScore = moveScoreTable[i].scoreInformation;
-        }
-      break;
+  //   switch(scoreToLookFor){
+  //     case MINIMAX_X_WINNING_SCORE:
+  //       printf("In Minimax_X case\n");
+  //       if (moveScoreTable[i].scoreInformation > baseScore){
+  //         baseScore = moveScoreTable[i].scoreInformation;
+  //       }
+  //     break;
       
-      case MINIMAX_O_WINNING_SCORE:
-        printf("In Minimax_O case\n");
-        if (moveScoreTable[i].scoreInformation < baseScore){
-          baseScore = moveScoreTable[i].scoreInformation;
-        }
-      break;
-    }
-  }
-
+  //     case MINIMAX_O_WINNING_SCORE:
+  //       printf("In Minimax_O case\n");
+  //       if (moveScoreTable[i].scoreInformation < baseScore){
+  //         baseScore = moveScoreTable[i].scoreInformation;
+  //       }
+  //     break;
+  //   }
+  // }
 
   //Print out the contents of moveScoreTable
-  printf("Printing out the contents of moveScoreTable:\n");
-  for (uint8_t i = 0; i < NUM_POSSIBLE_MOVES; i++) {
+  // printf("Printing out the contents of moveScoreTable:\n");
+  // for (uint8_t i = 0; i < NUM_POSSIBLE_MOVES; i++) {
 
-    printf("score for %d is: %d\n", i,moveScoreTable[i].scoreInformation);
+  //   printf("score for %d is: %d\n", i,moveScoreTable[i].scoreInformation);
 
-  }
+  // }
 
   //Find the move that corresponds to the given max/min score being stored in baseScore
-  for (uint8_t i = 0; i < NUM_POSSIBLE_MOVES; i++) {
+  // for (uint8_t i = 0; i < NUM_POSSIBLE_MOVES; i++) {
 
-    int8_t scoreToLookFor = is_Xs_turn ? MINIMAX_X_WINNING_SCORE : MINIMAX_O_WINNING_SCORE;
+  //   int8_t scoreToLookFor = is_Xs_turn ? MINIMAX_X_WINNING_SCORE : MINIMAX_O_WINNING_SCORE;
 
-    if (moveScoreTable[i].scoreInformation == baseScore){
-        printf("Matching score found. Found score of:%d\n", baseScore);
-        return moveScoreTable[i].moveLocation;
-    }
-  }
+  //   if (moveScoreTable[i].scoreInformation == baseScore){
+  //       printf("Matching score found. Found score of:%d\n", baseScore);
+  //       return moveScoreTable[i].moveLocation;
+  //   }
+  // }
 }
 
 void displayBoard(tictactoe_board_t *board) {
@@ -338,9 +330,6 @@ void minimax_initBoard(tictactoe_board_t *board) {
   for (uint8_t i = 0; i < NUM_POSSIBLE_MOVES; i++) {
     // Get the highest score with it's associated move
 
-    moveScoreTable[i].moveLocation.column = 0;
-    moveScoreTable[i].moveLocation.row = 0;
-    moveScoreTable[i].scoreInformation = 0;
   }
 }
 
