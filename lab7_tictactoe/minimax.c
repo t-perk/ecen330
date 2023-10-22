@@ -11,7 +11,6 @@
 static tictactoe_location_t bestMove;
 static uint32_t moveCounter;//Depth tracker
 
-
 // Define a multidimensional array with movelocation, score pairs
 minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn);
 
@@ -21,7 +20,6 @@ minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn);
 minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn) {
   
   uint8_t moveIndex = 0;
-  printf("In minimax with Xs turn being");
 
   //Create a score board for each move
   minimax_score_t moveScores[BOARD_SIZE];
@@ -35,7 +33,6 @@ minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn) {
   if (minimax_isGameOver(myScore)) {
     if (myScore < -1){
       // The & is passing the address of the board.
-      printf("game over condition met\n");
       myScore -= BOARD_SIZE - moveCounter;
     }else if(myScore > 1){
        myScore += BOARD_SIZE - moveCounter;
@@ -48,7 +45,6 @@ minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn) {
   for (currRow = 0; currRow < TICTACTOE_BOARD_ROWS; currRow++) {
     for (currColumn = 0; currColumn < TICTACTOE_BOARD_COLUMNS; currColumn++) {
       if ((*board).squares[currRow][currColumn] == MINIMAX_EMPTY_SQUARE) {
-        printf("Empty square found at: (%d,%d) \n", currRow, currColumn);
 
         // Simulate playing at this location
         (*board).squares[currRow][currColumn] =
@@ -111,8 +107,6 @@ minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn) {
 // (helper) function.
 tictactoe_location_t minimax_computeNextMove(tictactoe_board_t *board,
                                              bool is_Xs_turn) {
-  printf("\n\nIn minimax_computeNextMove\n");
-
   //Reset the overall move counter. we track the scores for every move.
   moveCounter = 0;
   minimax(board, is_Xs_turn);
@@ -147,14 +141,10 @@ void displayBoard(tictactoe_board_t *board) {
 // you don't need to look for 'O's, and vice-versa.
 minimax_score_t minimax_computeBoardScore(tictactoe_board_t *board,
                                           bool is_Xs_turn) {
-
-  printf("in minimax_computerBoardScore\n");
   displayBoard(board);
 
   tictactoe_square_state_t charToLookFor =
       is_Xs_turn ? MINIMAX_X_SQUARE : MINIMAX_O_SQUARE;
-
-  printf("charToLookFor is: %d\n", charToLookFor);
 
   minimax_score_t computedScore = MINIMAX_NOT_ENDGAME;
 
@@ -208,16 +198,7 @@ minimax_score_t minimax_computeBoardScore(tictactoe_board_t *board,
              (*board).squares[POSITION_1][POSITION_1] == charToLookFor &&
              (*board).squares[POSITION_2][POSITION_0] == charToLookFor) {
     isDiagonal = true;
-    printf("HERE Status of squares: %d, %d, %d\n", (*board).squares[POSITION_0][POSITION_2],
-           (*board).squares[POSITION_1][POSITION_1], (*board).squares[POSITION_2][POSITION_0]);
   }
-
-  printf("Status of board: \n");
-  printf("isRowComplete: %d\n", isRowComplete);
-  printf("isColumn: %d\n", isColumnComplete);
-  printf("isDiagonal: %d\n", isDiagonal);
-  printf("isBoardFilled: %d\n", isBoardFilled);
-  printf("\n");
 
   // check is there has been three in a row, column, or diagonal.
 
@@ -228,39 +209,17 @@ minimax_score_t minimax_computeBoardScore(tictactoe_board_t *board,
     case MINIMAX_O_SQUARE:
       return (MINIMAX_O_WINNING_SCORE);
     default:
-      printf("Error: default case entered with charToLookFor val: %d\n",
-             charToLookFor);
       break;
     }
   }
   // Not in win state, but isFilled
   else if (isBoardFilled) {
-    printf("board is filled with no win condition. Returning "
-           "MINIMAX_DRAW_SCORE\n");
     return MINIMAX_DRAW_SCORE;
   } else if (!isBoardFilled) {
-    printf("board is not filled with no win condition. Returning "
-           "MINIMAX_NOT_ENDGAME\n");
     return MINIMAX_NOT_ENDGAME;
   } else {
     printf("ERROR: Unaccounted option.\n");
   }
-
-  // TODO Account for when there is a DRAW or NOT ENDGAME
-  /*
-  DRAW Case
-  - There are available spots
-  - X does not have win condition
-  - O does not have win condition
-  NOT END GAME Case
-  - When there are available spots
-  - X does not have win condition
-  - O does not have win condition
-
-  When is_Xs_turn == true, we only need to check Xs because it's impossible
-  for O to be in a win state during X's turn.
-  */
-
   // So I really only need to check if all of the spots are filled or not.
 }
 
@@ -278,7 +237,6 @@ bool minimax_isGameOver(minimax_score_t score) {
     printf("ERROR: Unaccounted for case in isGameOver!\n");
   }
 
-  printf("Returning %d from isGameOver\n", returnValue);
   return returnValue;
 }
 
