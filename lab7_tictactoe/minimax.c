@@ -141,7 +141,7 @@ void displayBoard(tictactoe_board_t *board) {
 // you don't need to look for 'O's, and vice-versa.
 minimax_score_t minimax_computeBoardScore(tictactoe_board_t *board,
                                           bool is_Xs_turn) {
-  displayBoard(board);
+  // displayBoard(board);
 
   tictactoe_square_state_t charToLookFor =
       is_Xs_turn ? MINIMAX_X_SQUARE : MINIMAX_O_SQUARE;
@@ -225,7 +225,7 @@ minimax_score_t minimax_computeBoardScore(tictactoe_board_t *board,
 
 // Determine that the game is over by looking at the score.
 bool minimax_isGameOver(minimax_score_t score) {
-  printf("In isGameOver with a score of: %d\n", score);
+  // printf("In isGameOver with a score of: %d\n", score);
 
   bool returnValue;
   if (score == MINIMAX_DRAW_SCORE || score == MINIMAX_X_WINNING_SCORE ||
