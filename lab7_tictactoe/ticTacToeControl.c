@@ -4,6 +4,8 @@
 #include "minimax.h"
 #include "ticTacToeDisplay.h"
 #include "ticTacToe.h"
+#include "touchscreen.h"
+#include "buttons.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -32,8 +34,12 @@ enum ticTacToeControl_st_t {
     erase_txt_st,   //Erase opening message
     draw_lines_st,  //Draw ticTacToe lines
     comp_beg_wait_st,//Wait for player to play or begin computer
-    computer_move_st,
+    comp_move_st,
     player_move_st,
+    player_wait_st,
+    wait_for_release_st,
+    game_over_st,
+    erase_board_st,
 
 };
 //Declare currentState var
@@ -42,6 +48,7 @@ static enum ticTacToeControl_st_t currentState;
 // Initialize the tic-tac-toe controller state machine,
 // providing the tick period, in seconds.
 void ticTacToeControl_init(double period_s){
+    buttons_init();
 
     //Set current state
     currentState = init_st;
@@ -85,15 +92,19 @@ void ticTacToeControl_tick(){
     switch (currentState){
         case init_st:
             currentState = delay_txt_st;
+
             //Incorporate mealy state here for drawing starting text
             //drawText();
+            
             break;
         case delay_txt_st:
             if (disp_text_cnt == disp_text_num_ticks){
+                
                 //erase the txt
-                //eraseBoard();
+                
                 //display the lines
                 //dispLines();
+                ticTacToeDisplay_init();
                 currentState = comp_beg_wait_st;
             }else{
                 currentState = delay_txt_st;
@@ -101,19 +112,111 @@ void ticTacToeControl_tick(){
             break;
         case comp_beg_wait_st:
             if (comp_beg_wait_cnt = comp_beg_wait_num_ticks){
-                //Do computer's turn
-                tictactoe_location_t move = minimax_computeNextMove(&board, is_Xs_turn);
-                //Need to validate the there is nothing at that location 
-                //at the board?
-                ticTacToeDisplay_drawX(move, false);
-                board.squares[move.row][move.column] = MINIMAX_X_SQUARE;
-                //currentState = computer_move_st;
-            // }else if(receivedPlayerInput()){
-            //     //Check for input
-            //     currentState = player_move_st;
+                currentState = comp_move_st;
+            }else if(touchscreen_get_status() == TOUCHSCREEN_PRESSED){
+                //Send to a state that waits for the player to let go of the
+                //screen
+                currentState = wait_for_release_st;
             }else{
                 currentState = comp_beg_wait_st;
             }
+            break;
+        case comp_move_st:
+            //Do computer's turn
+            tictactoe_location_t move = minimax_computeNextMove(&board, is_Xs_turn);
+            ticTacToeDisplay_drawX(move, false);
+            //Update the record of the board we have to refelct the 
+            //visual changes that we made.
+            board.squares[move.row][move.column] = MINIMAX_X_SQUARE;
+
+            //Check if gameOver()
+            if (minimax_isGameOver(minimax_computeBoardScore(&board, is_Xs_turn))){
+                currentState = game_over_st;
+            }else{
+                currentState = player_wait_st;
+            }
+            break;
+        //Listen for a BTN0 press before erasing the board and
+        //starting over again.
+        case game_over_st:
+            if(buttons_read() & BUTTONS_BTN0_MASK){
+                //button was pressed. Erase board
+                currentState = erase_board_st;
+            }else{
+                //remain in state
+                currentState = game_over_st;
+            }
+            break;
+
+        //Wait here until the player makes a valid move
+        case player_wait_st:
+            if(touchscreen_get_status() == TOUCHSCREEN_PRESSED){
+                //Send to a state that waits for the player to let go of the
+                //screen
+                currentState = wait_for_release_st;
+            }else{
+                currentState = player_wait_st;
+            }
+            break;
+        //Waits for the player to release the button, then verifies if
+        //The location is valid and performs player's move
+        case wait_for_release_st:
+            if (touchscreen_get_status() == TOUCHSCREEN_RELEASED){
+                currentState = player_move_st;
+            }else{
+                currentState = wait_for_release_st;
+            }
+            break;
+
+        case player_move_st:
+            //Verify valid location and perform player move.
+                tictactoe_location_t moveLocation = ticTacToeDisplay_getLocationFromPoint(touchscreen_get_location());
+
+                if (board.squares[moveLocation.row][moveLocation.column] == MINIMAX_EMPTY_SQUARE){
+                    //Valid location. Put a O there
+                    //Do player's turn
+                    ticTacToeDisplay_drawO(moveLocation, false);
+                    //Update the record of the board we have to refelct the 
+                    //visual changes that we made.
+                    board.squares[moveLocation.row][moveLocation.column] = MINIMAX_X_SQUARE;
+                    
+                    //Acknowledge the touch so it can be used again
+                    touchscreen_ack_touch();
+                    if (minimax_isGameOver(minimax_computeBoardScore(&board, !is_Xs_turn))){
+                        currentState = game_over_st;
+                    }else{
+                        currentState = comp_move_st;
+                    }
+                }else{
+                    //We'll need to wait for another touch because move is invalid
+                    touchscreen_ack_touch();
+                    currentState = player_wait_st;
+                
+                }
+            break;
+
+        //Remove all O's and X's from display and board array
+        case erase_board_st:
+            //Move to function later
+            for (uint8_t row = 0; row < TICTACTOE_BOARD_ROWS; row++){
+                for (uint8_t col = 0; col < TICTACTOE_BOARD_COLUMNS; col++){
+                    tictactoe_location_t location;
+                    location.row = row;
+                    location.column = col;
+                    
+                    //Erase the stuff that's there.
+                    if (board.squares[row][col] == MINIMAX_O_SQUARE){
+                        ticTacToeDisplay_drawO(location, true);
+                        board.squares[location.row][location.column] = MINIMAX_EMPTY_SQUARE;
+                    } else if (board.squares[row][col] == MINIMAX_X_SQUARE){
+                        ticTacToeDisplay_drawX(location, true);
+                        board.squares[location.row][location.column] = MINIMAX_EMPTY_SQUARE;
+                    }
+                }
+            }
+            currentState = comp_beg_wait_cnt;
+            break;
+        
         default:
             printf("ERROR: Unaccounted state transition.\n");
     }
@@ -127,6 +230,9 @@ void ticTacToeControl_tick(){
             break;
         case comp_beg_wait_st:
             comp_beg_wait_cnt++;
+            break;
+        case comp_move_st:
+            break;
         default:
             printf("ERROR: Unaccounted state action.\n");
     }

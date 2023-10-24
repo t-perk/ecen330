@@ -8,6 +8,7 @@
     "C_Cpp.clang_format_fallbackStyle": "LLVM",
     "files.associations": {
         "xparameters.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "buttons.h": "c"
     }
 }
