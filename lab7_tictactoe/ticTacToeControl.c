@@ -6,6 +6,7 @@
 #include "ticTacToe.h"
 #include "touchscreen.h"
 #include "buttons.h"
+#include "display.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -14,6 +15,11 @@
 
 #define DISPLAY_TEXT_TIME 3
 #define COMPUTER_BEGINNING_WAIT_TIME 3
+
+//Display defines
+#define TEXT_SIZE 2
+#define CURSOR_X 10
+#define CURSOR_Y (DISPLAY_HEIGHT / 2)
 
 static tictactoe_board_t board;
 static bool is_Xs_turn = true;
@@ -40,7 +46,6 @@ enum ticTacToeControl_st_t {
     wait_for_release_st,
     game_over_st,
     erase_board_st,
-
 };
 //Declare currentState var
 static enum ticTacToeControl_st_t currentState;
@@ -95,15 +100,35 @@ void ticTacToeControl_tick(){
 
             //Incorporate mealy state here for drawing starting text
             //drawText();
+
+            // Initialize display driver, and fill scren with black
+            display_init();
+            
+            display_fillScreen(DISPLAY_BLACK); // Blank the screen.
+
+            // Configure display text settings
+            display_setTextColor(DISPLAY_LIGHT_GRAY); // Make the text white.
+            display_setTextSize(TEXT_SIZE);    // Make the text a little larger.
+
+            // Set the cursor location and print to the LCD
+            display_setCursor(CURSOR_X, CURSOR_Y);
+            // display_println("Touch board to play X\n-or-\nwait for the computer and play 0.\n");
             
             break;
         case delay_txt_st:
             if (disp_text_cnt == disp_text_num_ticks){
+
+                // Configure display text settings
+                display_setTextColor(DISPLAY_BLACK); // Make the text black (erase the text).
+                display_setTextSize(TEXT_SIZE);    // Make the text a little larger.
+
+                // Set the cursor location and print to the LCD
+                display_setCursor(CURSOR_X, CURSOR_Y);
+                display_println("Touch board to play X\n-or-\nwait for the computer and play 0.\n");
                 
                 //erase the txt
                 
                 //display the lines
-                //dispLines();
                 ticTacToeDisplay_init();
                 currentState = comp_beg_wait_st;
             }else{
@@ -116,14 +141,17 @@ void ticTacToeControl_tick(){
             }else if(touchscreen_get_status() == TOUCHSCREEN_PRESSED){
                 //Send to a state that waits for the player to let go of the
                 //screen
+                // is_Xs_turn = false;//We are going to have player be X
                 currentState = wait_for_release_st;
             }else{
                 currentState = comp_beg_wait_st;
             }
             break;
         case comp_move_st:
+            printf("Get location\n");
             //Do computer's turn
             tictactoe_location_t move = minimax_computeNextMove(&board, is_Xs_turn);
+            
             ticTacToeDisplay_drawX(move, false);
             //Update the record of the board we have to refelct the 
             //visual changes that we made.
@@ -170,29 +198,30 @@ void ticTacToeControl_tick(){
 
         case player_move_st:
             //Verify valid location and perform player move.
-                tictactoe_location_t moveLocation = ticTacToeDisplay_getLocationFromPoint(touchscreen_get_location());
+            printf("Get location\n");
+            tictactoe_location_t moveLocation = ticTacToeDisplay_getLocationFromPoint(touchscreen_get_location());
 
-                if (board.squares[moveLocation.row][moveLocation.column] == MINIMAX_EMPTY_SQUARE){
-                    //Valid location. Put a O there
-                    //Do player's turn
-                    ticTacToeDisplay_drawO(moveLocation, false);
-                    //Update the record of the board we have to refelct the 
-                    //visual changes that we made.
-                    board.squares[moveLocation.row][moveLocation.column] = MINIMAX_X_SQUARE;
-                    
-                    //Acknowledge the touch so it can be used again
-                    touchscreen_ack_touch();
-                    if (minimax_isGameOver(minimax_computeBoardScore(&board, !is_Xs_turn))){
-                        currentState = game_over_st;
-                    }else{
-                        currentState = comp_move_st;
-                    }
-                }else{
-                    //We'll need to wait for another touch because move is invalid
-                    touchscreen_ack_touch();
-                    currentState = player_wait_st;
+            if (board.squares[moveLocation.row][moveLocation.column] == MINIMAX_EMPTY_SQUARE){
+                //Valid location. Put a O there
+                //Do player's turn
+                ticTacToeDisplay_drawO(moveLocation, false);
+                //Update the record of the board we have to refelct the 
+                //visual changes that we made.
+                board.squares[moveLocation.row][moveLocation.column] = MINIMAX_X_SQUARE;
                 
+                //Acknowledge the touch so it can be used again
+                touchscreen_ack_touch();
+                if (minimax_isGameOver(minimax_computeBoardScore(&board, !is_Xs_turn))){
+                    currentState = game_over_st;
+                }else{
+                    currentState = comp_move_st;
                 }
+            }else{
+                //We'll need to wait for another touch because move is invalid
+                touchscreen_ack_touch();
+                currentState = player_wait_st;
+            
+            }
             break;
 
         //Remove all O's and X's from display and board array
