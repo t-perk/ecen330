@@ -141,12 +141,8 @@ void displayBoard(tictactoe_board_t *board) {
 // you don't need to look for 'O's, and vice-versa.
 minimax_score_t minimax_computeBoardScore(tictactoe_board_t *board,
                                           bool is_Xs_turn) {
-  // displayBoard(board);
-
   tictactoe_square_state_t charToLookFor =
       is_Xs_turn ? MINIMAX_X_SQUARE : MINIMAX_O_SQUARE;
-
-  minimax_score_t computedScore = MINIMAX_NOT_ENDGAME;
 
   bool isRowComplete = false;
   bool isColumnComplete = false;
@@ -201,15 +197,14 @@ minimax_score_t minimax_computeBoardScore(tictactoe_board_t *board,
   }
 
   // check is there has been three in a row, column, or diagonal.
-
   if (isRowComplete || isColumnComplete || isDiagonal) {
     switch (charToLookFor) {
-    case MINIMAX_X_SQUARE:
-      return (MINIMAX_X_WINNING_SCORE);
-    case MINIMAX_O_SQUARE:
-      return (MINIMAX_O_WINNING_SCORE);
-    default:
-      break;
+      case MINIMAX_X_SQUARE:
+        return (MINIMAX_X_WINNING_SCORE);
+      case MINIMAX_O_SQUARE:
+        return (MINIMAX_O_WINNING_SCORE);
+      default:
+        break;
     }
   }
   // Not in win state, but isFilled
@@ -220,7 +215,7 @@ minimax_score_t minimax_computeBoardScore(tictactoe_board_t *board,
   } else {
     printf("ERROR: Unaccounted option.\n");
   }
-  // So I really only need to check if all of the spots are filled or not.
+
 }
 
 // Determine that the game is over by looking at the score.
@@ -237,6 +232,7 @@ bool minimax_isGameOver(minimax_score_t score) {
   }
 
   return returnValue;
+
 }
 
 // Init the board to all empty squares.
