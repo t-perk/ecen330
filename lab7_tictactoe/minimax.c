@@ -7,21 +7,21 @@
 #define POSITION_1 1
 #define POSITION_2 2
 
-//Static meaning that it's global but only accessible within this file.
+// Static meaning that it's global but only accessible within this file.
 static tictactoe_location_t bestMove;
-static uint32_t moveCounter;//Depth tracker
+static uint32_t moveCounter; // Depth tracker
 
 // Define a multidimensional array with movelocation, score pairs
 minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn);
 
-//Recursively calls itself to calculate the optimal move associated
-//with a player's turn.
-//Returns a score associated with a move
+// Recursively calls itself to calculate the optimal move associated
+// with a player's turn.
+// Returns a score associated with a move
 minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn) {
-  
+
   uint8_t moveIndex = 0;
 
-  //Create a score board for each move
+  // Create a score board for each move
   minimax_score_t moveScores[BOARD_SIZE];
   tictactoe_location_t moveLocations[BOARD_SIZE];
 
@@ -30,14 +30,16 @@ minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn) {
   uint8_t currRow = 0;
   uint8_t currColumn = 0;
 
+  // Check for isGameOver state and calculate score based on
+  // The moveCounter depth and wehther we are minimizing/max the score
   if (minimax_isGameOver(myScore)) {
-    if (myScore < -1){
+    if (myScore < -1) {
       // The & is passing the address of the board.
       myScore -= BOARD_SIZE - moveCounter;
-    }else if(myScore > 1){
-       myScore += BOARD_SIZE - moveCounter;
+    } else if (myScore > 1) {
+      myScore += BOARD_SIZE - moveCounter;
     }
-    
+
     return myScore;
   }
 
@@ -67,10 +69,11 @@ minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn) {
     }
   }
 
-  //This is the "potential" bestScore that we use to compare against
+  // This is the "potential" bestScore that we use to compare against
   minimax_score_t bestScore = moveScores[0];
   bestMove = moveLocations[0];
 
+  // Determine the best move associated with the best score
   if (is_Xs_turn) {
     for (uint8_t i = 1; i < moveIndex; i++) {
       // Get the highest score with it's associated move
@@ -79,7 +82,7 @@ minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn) {
         bestMove = moveLocations[i];
       }
     }
-  } else if (!is_Xs_turn){
+  } else if (!is_Xs_turn) {
     for (uint8_t i = 1; i < moveIndex; i++) {
       // Get the highest score with it's associated move
       if (moveScores[i] < bestScore) {
@@ -107,24 +110,26 @@ minimax_score_t minimax(tictactoe_board_t *board, bool is_Xs_turn) {
 // (helper) function.
 tictactoe_location_t minimax_computeNextMove(tictactoe_board_t *board,
                                              bool is_Xs_turn) {
-  //Reset the overall move counter. we track the scores for every move.
+  // Reset the overall move counter. we track the scores for every move.
   moveCounter = 0;
   minimax(board, is_Xs_turn);
 
   return bestMove;
-    
 }
 
-//Prints out a visual representation of the board at each step of the process
+// Prints out a visual representation of the board at each step of the process
 void displayBoard(tictactoe_board_t *board) {
   printf("Board details:\n");
-  printf("%d|%d|%d\n", (*board).squares[POSITION_0][POSITION_0], (*board).squares[POSITION_0][POSITION_1],
+  printf("%d|%d|%d\n", (*board).squares[POSITION_0][POSITION_0],
+         (*board).squares[POSITION_0][POSITION_1],
          (*board).squares[POSITION_0][POSITION_2]);
   printf("-+-+-\n");
-  printf("%d|%d|%d\n", (*board).squares[POSITION_1][POSITION_0], (*board).squares[POSITION_1][POSITION_1],
+  printf("%d|%d|%d\n", (*board).squares[POSITION_1][POSITION_0],
+         (*board).squares[POSITION_1][POSITION_1],
          (*board).squares[POSITION_1][POSITION_2]);
   printf("-+-+-\n");
-  printf("%d|%d|%d\n", (*board).squares[POSITION_2][POSITION_0], (*board).squares[POSITION_2][POSITION_1],
+  printf("%d|%d|%d\n", (*board).squares[POSITION_2][POSITION_0],
+         (*board).squares[POSITION_2][POSITION_1],
          (*board).squares[POSITION_2][POSITION_2]);
   printf("\n");
 }
@@ -199,12 +204,12 @@ minimax_score_t minimax_computeBoardScore(tictactoe_board_t *board,
   // check is there has been three in a row, column, or diagonal.
   if (isRowComplete || isColumnComplete || isDiagonal) {
     switch (charToLookFor) {
-      case MINIMAX_X_SQUARE:
-        return (MINIMAX_X_WINNING_SCORE);
-      case MINIMAX_O_SQUARE:
-        return (MINIMAX_O_WINNING_SCORE);
-      default:
-        break;
+    case MINIMAX_X_SQUARE:
+      return (MINIMAX_X_WINNING_SCORE);
+    case MINIMAX_O_SQUARE:
+      return (MINIMAX_O_WINNING_SCORE);
+    default:
+      break;
     }
   }
   // Not in win state, but isFilled
@@ -215,10 +220,10 @@ minimax_score_t minimax_computeBoardScore(tictactoe_board_t *board,
   } else {
     printf("ERROR: Unaccounted option.\n");
   }
-
 }
 
 // Determine that the game is over by looking at the score.
+// Returns whether a gameOver condition has been met
 bool minimax_isGameOver(minimax_score_t score) {
 
   bool returnValue;
@@ -232,15 +237,14 @@ bool minimax_isGameOver(minimax_score_t score) {
   }
 
   return returnValue;
-
 }
 
 // Init the board to all empty squares.
 void minimax_initBoard(tictactoe_board_t *board) {
 
   for (int row = 0; row < TICTACTOE_BOARD_ROWS; row++) {
-        for (int col = 0; col < TICTACTOE_BOARD_COLUMNS; col++) {
-            (*board).squares[row][col] = MINIMAX_EMPTY_SQUARE;
-        }
+    for (int col = 0; col < TICTACTOE_BOARD_COLUMNS; col++) {
+      (*board).squares[row][col] = MINIMAX_EMPTY_SQUARE;
     }
+  }
 }
