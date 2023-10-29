@@ -9,6 +9,8 @@
     "files.associations": {
         "xparameters.h": "c",
         "stdio.h": "c",
-        "buttons.h": "c"
+        "buttons.h": "c",
+        "math.h": "c",
+        "cmath": "c"
     }
 }
