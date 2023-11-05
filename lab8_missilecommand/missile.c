@@ -58,7 +58,6 @@ void missile_init_helper(missile_t *missile) {
 // game to ensure that player and plane missiles aren't moving before they
 // should.
 void missile_init_dead(missile_t *missile) {
-  printf("missile_init_dead\n");
   missile_init_helper(missile);
 
   missile->currentState = dead_st;
@@ -69,7 +68,6 @@ void missile_init_dead(missile_t *missile) {
 // the top of the screen, and the destination should be the very bottom of the
 // screen.
 void missile_init_enemy(missile_t *missile) {
-  printf("missile_init_enemy\n");
 
   missile_init_helper(missile);
 
@@ -88,10 +86,6 @@ void missile_init_enemy(missile_t *missile) {
   missile->x_dest = enemy_rand_x_dest;
   missile->y_dest = enemy_y_dest;
 
-  printf("Declared enemy missile starting at (%d,%d) and ending at (%d,%d)\n",
-         missile->x_origin, missile->y_origin, missile->x_dest,
-         missile->y_dest);
-
   // Update total_length
   missile->total_length = (int)sqrt(
       pow((missile->y_dest - missile->y_origin), MISSILE_SQUARE_POWER) +
@@ -105,8 +99,6 @@ void missile_init_enemy(missile_t *missile) {
 // origin should be the closest "firing location" to the destination (there are
 // three firing locations evenly spaced along the bottom of the screen).
 void missile_init_player(missile_t *missile, uint16_t x_dest, uint16_t y_dest) {
-
-  printf("missile_init_player\n");
 
   missile_init_helper(missile);
 
@@ -152,10 +144,6 @@ void missile_init_player(missile_t *missile, uint16_t x_dest, uint16_t y_dest) {
 
   missile->x_dest = x_dest;
   missile->y_dest = y_dest;
-
-  printf("Declared player missile starting at (%d,%d) and ending at (%d,%d)\n",
-         missile->x_origin, missile->y_origin, missile->x_dest,
-         missile->y_dest);
 
   // Update total_length
   missile->total_length = (int)sqrt(
@@ -211,7 +199,7 @@ void debugStatePrint_Missile(missile_t *missile) {
 ////////// State Machine TICK Function //////////
 void missile_tick(missile_t *missile) {
 
-  debugStatePrint_Missile(missile);
+  // debugStatePrint_Missile(missile);
 
   // Handle state transitions
   switch (missile->currentState) {
@@ -244,9 +232,10 @@ void missile_tick(missile_t *missile) {
 
     // Check to see if the missle has traveled far enough. If so, don't draw a
     // new one, but instead transition to another state
-    if (missile->length > missile->total_length) {
+    if (missile->length > missile->total_length || missile->explode_me) {
       // It's close enough.
       missile->currentState = explode_grow_st;
+      missile->explode_me = true;
     } else {
       // Not close enough, so go ahead and draw the line and stay in the same
       // state.
@@ -256,9 +245,6 @@ void missile_tick(missile_t *missile) {
                            percentage * (missile->y_dest - missile->y_origin);
 
       // Display the new line dependant on the missile type
-      printf("drawing new line from (%d,%d) and ending at (%d,%d)\n",
-             missile->x_origin, missile->y_origin, missile->x_current,
-             missile->y_current);
 
       if (MISSILE_TYPE_PLAYER == missile->type) {
         display_drawLine(missile->x_origin, missile->y_origin,
@@ -331,7 +317,9 @@ void missile_tick(missile_t *missile) {
       missile->currentState = dead_st;
     }
     break;
+    // Stay in the dead_st until you are reinitialized
   case dead_st:
+    missile->currentState = dead_st;
     break;
   default:
     printf("ERROR: Unaccounted state transition.\n");
@@ -356,6 +344,8 @@ void missile_tick(missile_t *missile) {
 
 // Return whether the given missile is dead.
 bool missile_is_dead(missile_t *missile) {
+  // printf("Current state of missile is: %d with type: %d\n",
+  //        missile->currentState, missile->type);
   return (dead_st == missile->currentState);
 }
 
@@ -386,6 +376,5 @@ bool missile_is_flying(missile_t *missile) {
 // Used to indicate that a flying missile should be detonated.  This occurs
 // when an enemy or plane missile is located within an explosion zone.
 void missile_trigger_explosion(missile_t *missile) {
-  printf("missile_trigger_explosion\n");
   missile->explode_me = true;
 }
