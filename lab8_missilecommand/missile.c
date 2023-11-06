@@ -20,6 +20,10 @@
 
 #define MISSILE_SQUARE_POWER 2
 
+// Currently set to 2 because each tick function inside of gameControl only
+// ticks half of the missiles, so we need everything to be mulitplied by 2
+#define MISSILE_SPEED_MULTIPLIER 2
+
 // All printed messages for states are provided here.
 #define INIT_ST_MSG "missile_init_st\n"
 #define MOVING_ST_MSG "missile_moving_st\n"
@@ -46,6 +50,7 @@ void missile_init_helper(missile_t *missile) {
 
   missile->length = 0;
   missile->explode_me = false;
+  // TODO replace the sqrt to speed up process.
   missile->total_length =
       sqrt(pow((missile->y_dest - missile->y_origin), MISSILE_SQUARE_POWER) +
            pow((missile->x_dest - missile->x_origin), MISSILE_SQUARE_POWER));
@@ -215,11 +220,13 @@ void missile_tick(missile_t *missile) {
 
     if (MISSILE_TYPE_PLAYER == missile->type) {
       missile->length =
-          missile->length + CONFIG_PLAYER_MISSILE_DISTANCE_PER_TICK;
+          missile->length +
+          (CONFIG_PLAYER_MISSILE_DISTANCE_PER_TICK * MISSILE_SPEED_MULTIPLIER);
     } else if ((MISSILE_TYPE_ENEMY == missile->type) ||
                (MISSILE_TYPE_PLANE == missile->type)) {
       missile->length =
-          missile->length + CONFIG_ENEMY_MISSILE_DISTANCE_PER_TICK;
+          missile->length +
+          (CONFIG_ENEMY_MISSILE_DISTANCE_PER_TICK * MISSILE_SPEED_MULTIPLIER);
     }
 
     //  Calculate the new x_current and y_current given the speed at which
@@ -268,7 +275,9 @@ void missile_tick(missile_t *missile) {
     break;
   case explode_grow_st:
     // Increase radius
-    missile->radius = missile->radius + CONFIG_EXPLOSION_RADIUS_CHANGE_PER_TICK;
+    missile->radius =
+        missile->radius +
+        (CONFIG_EXPLOSION_RADIUS_CHANGE_PER_TICK * MISSILE_SPEED_MULTIPLIER);
 
     // If circle radius is beneath its max, draw the bigger circle. If not then
     // transition states to explode_shrink_st
@@ -279,8 +288,8 @@ void missile_tick(missile_t *missile) {
         display_fillCircle(missile->x_current, missile->y_current,
                            missile->radius, CONFIG_COLOR_PLAYER);
       } else if (MISSILE_TYPE_ENEMY == missile->type) {
-        // display_fillCircle(missile->x_current, missile->y_current,
-        //                    missile->radius, CONFIG_COLOR_ENEMY);
+        display_fillCircle(missile->x_current, missile->y_current,
+                           missile->radius, CONFIG_COLOR_ENEMY);
       } else if (MISSILE_TYPE_PLANE == missile->type) {
         display_fillCircle(missile->x_current, missile->y_current,
                            missile->radius, CONFIG_COLOR_PLANE);
@@ -296,7 +305,9 @@ void missile_tick(missile_t *missile) {
                        CONFIG_BACKGROUND_COLOR);
 
     // Decrease radius
-    missile->radius = missile->radius - CONFIG_EXPLOSION_RADIUS_CHANGE_PER_TICK;
+    missile->radius =
+        missile->radius -
+        (CONFIG_EXPLOSION_RADIUS_CHANGE_PER_TICK * MISSILE_SPEED_MULTIPLIER);
 
     // Draw circle - TEST
     if (missile->radius > 2) {
@@ -305,8 +316,8 @@ void missile_tick(missile_t *missile) {
         display_fillCircle(missile->x_current, missile->y_current,
                            missile->radius, CONFIG_COLOR_PLAYER);
       } else if (MISSILE_TYPE_ENEMY == missile->type) {
-        // display_fillCircle(missile->x_current, missile->y_current,
-        //                    missile->radius, CONFIG_COLOR_ENEMY);
+        display_fillCircle(missile->x_current, missile->y_current,
+                           missile->radius, CONFIG_COLOR_ENEMY);
       } else if (MISSILE_TYPE_PLANE == missile->type) {
         display_fillCircle(missile->x_current, missile->y_current,
                            missile->radius, CONFIG_COLOR_PLANE);

@@ -101,14 +101,14 @@ void gameControl_tick() {
 
   // If enemy missile is dead, relaunch it (call init again)
   // Check for dead enemy missiles and re-initialize
-  for (uint16_t i = 0; i < CONFIG_MAX_TOTAL_MISSILES; i++) {
+  for (uint16_t i = 0; i < CONFIG_MAX_ENEMY_MISSILES; i++) {
     if (missile_is_dead(&enemy_missiles[i])) {
       missile_init_enemy(&enemy_missiles[i]);
     }
   }
 
   // Detect collisions
-  for (uint16_t i = 0; i < CONFIG_MAX_TOTAL_MISSILES; i++) {
+  for (uint16_t i = 0; i < CONFIG_MAX_ENEMY_MISSILES; i++) {
     if (missile_is_dead(&enemy_missiles[i])) {
       missile_init_enemy(&enemy_missiles[i]);
     }
@@ -155,6 +155,18 @@ void gameControl_tick() {
            abs(otherMissileLocation_x - enemyMissileLocation_x) *
                abs(otherMissileLocation_x - enemyMissileLocation_x)) <
           otherMissileRadius * otherMissileRadius;
+
+      // bool isInRadius =
+      //     (((double)(otherMissileLocation_y - enemyMissileLocation_y) *
+      //       (double)(otherMissileLocation_y - enemyMissileLocation_y)) +
+      //      abs(otherMissileLocation_x - enemyMissileLocation_x) *
+      //          abs(otherMissileLocation_x - enemyMissileLocation_x)) <
+      //     otherMissileRadius * otherMissileRadius;
+
+      /*
+      bool isInRadius = (pow((double)(otherMissileLocation_y -
+      enemyMissileLocation_y),))
+      */
 
       //   printf("change in y squared: %d\n change in x squared: %d\n radius "
       //          "squared: %d\n",
@@ -206,18 +218,18 @@ void gameControl_tick() {
 
       // Find the first instance of a player missile that is dead. If you find
       // one, we can assume that there is an available missile to fire.
-      //   printf("before loop\n");
-      //   printf("First player missile is: %d\n",
-      //          missile_is_dead(&player_missiles[CONFIG_MAX_ENEMY_MISSILES]));
+      printf("First player missile is: %d\n",
+             missile_is_dead(&player_missiles[CONFIG_MAX_ENEMY_MISSILES]));
       for (uint16_t i = 0; i < CONFIG_MAX_PLAYER_MISSILES; i++) {
-        // printf("Inside of loop\n");
-        // printf("Yo: %d\n", &player_missiles[i]);
-        // if (missile_is_dead(&player_missiles[i])) {
-        display_point_t touchPoint = touchscreen_get_location();
-        printf("Initializing missile at: %d, %d\n", touchPoint.x, touchPoint.y);
+        printf("Yo: %d\n", &player_missiles[i]);
+        if (missile_is_dead(&player_missiles[i])) {
+          display_point_t touchPoint = touchscreen_get_location();
+          printf("Initializing missile at: %d, %d\n", touchPoint.x,
+                 touchPoint.y);
 
-        missile_init_player(&player_missiles[i], touchPoint.x, touchPoint.y);
-        // }
+          missile_init_player(&player_missiles[i], touchPoint.x, touchPoint.y);
+          break;
+        }
       }
       touchscreen_ack_touch();
 
