@@ -117,28 +117,32 @@ void missile_init_player(missile_t *missile, uint16_t x_dest, uint16_t y_dest) {
   // Loop through each of the three spawn points and see if it's the closest
 
   // Left spawn point
-  uint16_t distToSpawnPoint = sqrt(
-      pow((y_dest - MISSILE_BOTTOM_LIMIT_HEIGHT), MISSILE_SQUARE_POWER) +
-      pow((x_dest - MISSILE_PLAYER_MISSILE_SPAWN_LEFT), MISSILE_SQUARE_POWER));
+  // Normally I would take the sqrt of all these
+  uint16_t distToSpawnPoint =
+      sqrt(((y_dest - MISSILE_BOTTOM_LIMIT_HEIGHT) *
+            (y_dest - MISSILE_BOTTOM_LIMIT_HEIGHT)) +
+           ((x_dest - MISSILE_PLAYER_MISSILE_SPAWN_LEFT) *
+            (x_dest - MISSILE_PLAYER_MISSILE_SPAWN_LEFT)));
 
   // By default, we are putting the spawn point at the left and setting the
   // starting closestDistance
   closestDistance = distToSpawnPoint;
 
   // Center spawn point
-  distToSpawnPoint =
-      sqrt(pow((y_dest - MISSILE_BOTTOM_LIMIT_HEIGHT), MISSILE_SQUARE_POWER) +
-           pow((x_dest - MISSILE_PLAYER_MISSILE_SPAWN_CENTER),
-               MISSILE_SQUARE_POWER));
+  distToSpawnPoint = sqrt(((y_dest - MISSILE_BOTTOM_LIMIT_HEIGHT) *
+                           (y_dest - MISSILE_BOTTOM_LIMIT_HEIGHT)) +
+                          ((x_dest - MISSILE_PLAYER_MISSILE_SPAWN_CENTER) *
+                           (x_dest - MISSILE_PLAYER_MISSILE_SPAWN_CENTER)));
   if (distToSpawnPoint < closestDistance) {
     chosenSpawnLocation_x = MISSILE_PLAYER_MISSILE_SPAWN_CENTER;
     closestDistance = distToSpawnPoint;
   }
 
   // Right spawn point
-  distToSpawnPoint = sqrt(
-      pow((y_dest - MISSILE_BOTTOM_LIMIT_HEIGHT), MISSILE_SQUARE_POWER) +
-      pow((x_dest - MISSILE_PLAYER_MISSILE_SPAWN_RIGHT), MISSILE_SQUARE_POWER));
+  distToSpawnPoint = sqrt(((y_dest - MISSILE_BOTTOM_LIMIT_HEIGHT) *
+                           (y_dest - MISSILE_BOTTOM_LIMIT_HEIGHT)) +
+                          ((x_dest - MISSILE_PLAYER_MISSILE_SPAWN_RIGHT) *
+                           (x_dest - MISSILE_PLAYER_MISSILE_SPAWN_RIGHT)));
   if (distToSpawnPoint < closestDistance) {
     chosenSpawnLocation_x = MISSILE_PLAYER_MISSILE_SPAWN_RIGHT;
     closestDistance = distToSpawnPoint;
@@ -151,9 +155,10 @@ void missile_init_player(missile_t *missile, uint16_t x_dest, uint16_t y_dest) {
   missile->y_dest = y_dest;
 
   // Update total_length
-  missile->total_length = (int)sqrt(
-      pow((missile->y_dest - missile->y_origin), MISSILE_SQUARE_POWER) +
-      pow((missile->x_dest - missile->x_origin), MISSILE_SQUARE_POWER));
+  missile->total_length = (int)sqrt(((missile->y_dest - missile->y_origin) *
+                                     (missile->y_dest - missile->y_origin)) +
+                                    ((missile->x_dest - missile->x_origin) *
+                                     (missile->x_dest - missile->x_origin)));
 
   missile->currentState = init_st;
 }

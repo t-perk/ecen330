@@ -114,21 +114,8 @@ void gameControl_tick() {
     }
   }
 
-  /*
-
   // Check if missile i should explode, caused by an exploding missile j
- for (i in enemy missiles)
-   for (j in all missiles)
 
-     if (missile[i] is not flying)
-       continue
-     if (missile[j] is not exploding)
-       continue
-
-     if (missile[i] within missile[j] radius)
-       missile_trigger_explosion(&missile[i])
-
-  */
   for (uint16_t i = 0; i < CONFIG_MAX_ENEMY_MISSILES; i++) {
     int16_t enemyMissileLocation_x = missiles[i].x_current;
     int16_t enemyMissileLocation_y = missiles[i].y_current;
@@ -150,39 +137,11 @@ void gameControl_tick() {
       int16_t otherMissileRadius = missiles[j].radius;
 
       bool isInRadius =
-          (pow((double)(otherMissileLocation_y - enemyMissileLocation_y),
-               GAMECONTROL_SQUARE_POWER) +
+          (((otherMissileLocation_y - enemyMissileLocation_y) *
+            (otherMissileLocation_y - enemyMissileLocation_y)) +
            abs(otherMissileLocation_x - enemyMissileLocation_x) *
                abs(otherMissileLocation_x - enemyMissileLocation_x)) <
           otherMissileRadius * otherMissileRadius;
-
-      // bool isInRadius =
-      //     (((double)(otherMissileLocation_y - enemyMissileLocation_y) *
-      //       (double)(otherMissileLocation_y - enemyMissileLocation_y)) +
-      //      abs(otherMissileLocation_x - enemyMissileLocation_x) *
-      //          abs(otherMissileLocation_x - enemyMissileLocation_x)) <
-      //     otherMissileRadius * otherMissileRadius;
-
-      /*
-      bool isInRadius = (pow((double)(otherMissileLocation_y -
-      enemyMissileLocation_y),))
-      */
-
-      //   printf("change in y squared: %d\n change in x squared: %d\n radius "
-      //          "squared: %d\n",
-      //          pow((otherMissileLocation_y - enemyMissileLocation_y),
-      //              GAMECONTROL_SQUARE_POWER),
-      //          pow((otherMissileLocation_x - enemyMissileLocation_x),
-      //              GAMECONTROL_SQUARE_POWER),
-      //          pow(missiles[j].radius, GAMECONTROL_SQUARE_POWER));
-
-      //   printf("change in y squared: %f\n change in x squared: %d\n radius "
-      //          "squared: %d\n",
-      //          pow((double)(otherMissileLocation_y - enemyMissileLocation_y),
-      //              GAMECONTROL_SQUARE_POWER),
-      //          abs(otherMissileLocation_x - enemyMissileLocation_x) *
-      //              abs(otherMissileLocation_x - enemyMissileLocation_x),
-      //          otherMissileRadius * otherMissileRadius);
 
       if (isInRadius) {
         printf("is in radius!\n\n");
@@ -211,7 +170,7 @@ void gameControl_tick() {
     break;
   case wait_release_st:
     // I was running into a weird issue where my touchscreen status was skipping
-    // released and going straight to idle
+    // released and going straight to idle, so I just used this line instead.
     if (touchscreen_get_status() != TOUCHSCREEN_PRESSED) {
 
       // Launch player missile (if one is available)
@@ -226,7 +185,6 @@ void gameControl_tick() {
           display_point_t touchPoint = touchscreen_get_location();
           printf("Initializing missile at: %d, %d\n", touchPoint.x,
                  touchPoint.y);
-
           missile_init_player(&player_missiles[i], touchPoint.x, touchPoint.y);
           break;
         }
