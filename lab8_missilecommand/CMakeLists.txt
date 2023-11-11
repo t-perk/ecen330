@@ -4,6 +4,11 @@ target_link_libraries(lab8_m1.elf ${330_LIBS} touchscreen intervalTimer interrup
 set_target_properties(lab8_m1.elf PROPERTIES LINKER_LANGUAGE CXX)
 
 # Milestone #2
-add_executable(lab8_m2.elf main_m2.c missile.c gameControl.c)
+add_executable(lab8_m2.elf main_m2.c missile.c gameControl.c plane.c)
 target_link_libraries(lab8_m2.elf ${330_LIBS} touchscreen intervalTimer interrupts)
 set_target_properties(lab8_m2.elf PROPERTIES LINKER_LANGUAGE CXX)
+
+# Milestone #3
+add_executable(lab8_m3.elf main_m3.c missile.c gameControl.c plane.c)
+target_link_libraries(lab8_m3.elf ${330_LIBS} touchscreen intervalTimer interrupts)
+set_target_properties(lab8_m3.elf PROPERTIES LINKER_LANGUAGE CXX)

@@ -6,6 +6,7 @@
 #include "interrupts.h"
 #include "intervalTimer.h"
 #include "missile.h"
+#include "plane.h"
 #include "touchscreen.h"
 
 #include "gameControl.h"
@@ -18,6 +19,9 @@ missile_t *enemy_missiles = &(missiles[0]);
 // Make a pointer that stores all the player missiles after the end of the space
 // allocated for the enemy missiles
 missile_t *player_missiles = &(missiles[CONFIG_MAX_ENEMY_MISSILES]);
+// Make a pointer that stores the plane missile after the end of the space
+// allocated for the plane missiles
+missile_t *plane_missile = &(missiles[CONFIG_MAX_PLAYER_MISSILES]);
 
 bool tickOddMissiles = true;
 
@@ -41,12 +45,16 @@ static enum gameControl_st_t currentState;
 // Initialize the game control logic
 // This function will initialize all missiles, stats, plane, etc.
 void gameControl_init() {
+
   currentState = init_st;
   display_fillScreen(CONFIG_BACKGROUND_COLOR);
 
   // Initialize missiles
-  for (uint16_t i = 0; i < CONFIG_MAX_TOTAL_MISSILES; i++)
+  for (uint16_t i = 0; i < CONFIG_MAX_TOTAL_MISSILES; i++) {
     missile_init_dead(&missiles[i]);
+  }
+
+  plane_init(plane_missile);
 }
 
 // This is a debug state print routine. It will print the names of the states
@@ -78,7 +86,7 @@ void debugStatePrint_gameControl() {
       printf(RELEASED_ST_MSG);
       break;
     default:
-      printf("ERROR: Unaccounted state action.\n");
+      printf("ERROR: Unaccounted gameControl state action.\n");
     }
   }
 }
@@ -147,8 +155,25 @@ void gameControl_tick() {
         printf("is in radius!\n\n");
         missile_trigger_explosion(&missiles[i]);
       }
+
+      display_point_t planeLocation = plane_getXY();
+
+      bool planeIsInRadius =
+          (((otherMissileLocation_y - planeLocation.y) *
+            (otherMissileLocation_y - planeLocation.y)) +
+           abs(otherMissileLocation_x - planeLocation.x) *
+               abs(otherMissileLocation_x - planeLocation.x)) <
+          otherMissileRadius * otherMissileRadius;
+
+      if (planeIsInRadius) {
+        // Increment impact here?
+        plane_explode();
+      }
     }
   }
+
+  // Tick the plane state machine
+  plane_tick();
 
   // Used state machine logic to handle the touchscreen/player interaction.
   //  If touchscreen touched, launch player missile (if one is available)

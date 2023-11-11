@@ -1,6 +1,7 @@
 #include "missile.h"
 #include "config.h"
 #include "display.h"
+#include "plane.h"
 #include "xil_io.h"
 #include "xparameters.h"
 
@@ -168,6 +169,26 @@ void missile_init_player(missile_t *missile, uint16_t x_dest, uint16_t y_dest) {
 // be randomly chosed along the bottom of the screen.
 void missile_init_plane(missile_t *missile, int16_t plane_x, int16_t plane_y) {
   printf("missile_init_plane\n");
+
+  missile_init_helper(missile);
+
+  missile->type = MISSILE_TYPE_PLANE;
+
+  missile->x_origin = plane_x;
+  missile->y_origin = plane_y;
+
+  uint16_t plane_rand_x_dest = rand() % DISPLAY_WIDTH;
+  uint16_t plane_y_dest = DISPLAY_HEIGHT;
+
+  missile->x_dest = plane_rand_x_dest;
+  missile->y_dest = plane_y_dest;
+
+  // Update total_length
+  missile->total_length = (int)sqrt(
+      pow((missile->y_dest - missile->y_origin), MISSILE_SQUARE_POWER) +
+      pow((missile->x_dest - missile->x_origin), MISSILE_SQUARE_POWER));
+
+  missile->currentState = init_st;
 }
 
 // This is a debug state print routine. It will print the names of the states
