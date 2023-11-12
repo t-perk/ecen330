@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define MISSILE_TOP_LIMIT_HEIGHT 10
+#define MISSILE_TOP_LIMIT_HEIGHT 16
 #define MISSILE_BOTTOM_LIMIT_HEIGHT DISPLAY_HEIGHT
 
 #define MISSILE_PLAYER_NUMBER_SPAWN_LOCATIONS 3
@@ -32,10 +32,6 @@
 #define EXPLODE_SHRINK_ST_MSG "missile_explode_shrink_st\n"
 #define DEAD_ST_MSG "missile_dead_st\n"
 
-uint8_t total_enemy_missiles;
-uint8_t total_player_missiles;
-uint8_t total_plane_missiles;
-
 enum missile_st_t {
   init_st,           // Starts here. Will feed into the moving state
   moving_st,         // missile traveling
@@ -51,7 +47,7 @@ void missile_init_helper(missile_t *missile) {
 
   missile->length = 0;
   missile->explode_me = false;
-  // TODO replace the sqrt to speed up process.
+  // TODO replace the sqrt to speed up process if dropping.
   missile->total_length =
       sqrt(pow((missile->y_dest - missile->y_origin), MISSILE_SQUARE_POWER) +
            pow((missile->x_dest - missile->x_origin), MISSILE_SQUARE_POWER));
@@ -238,6 +234,7 @@ void missile_tick(missile_t *missile) {
   case init_st:
     missile->currentState = moving_st;
     break;
+  // Update and draw missile lines
   case moving_st:
 
     // Erase the current line
@@ -286,7 +283,6 @@ void missile_tick(missile_t *missile) {
                            percentage * (missile->y_dest - missile->y_origin);
 
       // Display the new line dependant on the missile type
-
       if (MISSILE_TYPE_PLAYER == missile->type) {
         display_drawLine(missile->x_origin, missile->y_origin,
                          missile->x_current, missile->y_current,
@@ -307,6 +303,8 @@ void missile_tick(missile_t *missile) {
     }
 
     break;
+
+  // Progressively grow the radius of the explosion
   case explode_grow_st:
     // Increase radius
     missile->radius =
@@ -333,6 +331,8 @@ void missile_tick(missile_t *missile) {
     }
 
     break;
+
+  // Progressively shrink the radius of the explosion
   case explode_shrink_st:
     // Erase circle
     display_fillCircle(missile->x_current, missile->y_current, missile->radius,
@@ -362,7 +362,8 @@ void missile_tick(missile_t *missile) {
       missile->currentState = dead_st;
     }
     break;
-    // Stay in the dead_st until you are reinitialized
+
+  // Stay in the dead_st until you are reinitialized
   case dead_st:
     missile->currentState = dead_st;
     break;
@@ -387,24 +388,19 @@ void missile_tick(missile_t *missile) {
   }
 }
 
-// Return whether the given missile is dead.
+// Returns whether the given missile is dead.
 bool missile_is_dead(missile_t *missile) {
-  // printf("Current state of missile is: %d with type: %d\n",
-  //        missile->currentState, missile->type);
   return (dead_st == missile->currentState);
 }
 
 // Return whether the given missile is exploding.  This is needed when
 // detecting whether a missile hits another exploding missile.
 bool missile_is_exploding(missile_t *missile) {
-  return (true ==
-          missile->explode_me); // TODO Is this what we want to check for?
+  return (true == missile->explode_me);
 }
 
 // Return whether the given missile is flying.
 bool missile_is_flying(missile_t *missile) {
-  // What is the condition for whether a missile is flying?
-  //! explode_me && percentage - epsilon < 1
 
   double percentage = missile->length / (double)missile->total_length;
   double epsilon = 0.01; // Might need to finagle this around

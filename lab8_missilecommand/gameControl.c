@@ -24,6 +24,7 @@ missile_t *player_missiles = &(missiles[CONFIG_MAX_ENEMY_MISSILES]); // 7-10
 // allocated for the plane missiles
 missile_t *plane_missile = &(missiles[CONFIG_MAX_TOTAL_MISSILES - 1]); // 11
 
+// Declarations for displaying game stats
 uint16_t impacted_cnt;
 uint16_t shots_cnt;
 uint16_t old_impacted_cnt;
@@ -31,29 +32,29 @@ uint16_t old_shots_cnt;
 
 bool tickOddMissiles = true;
 
+// Used to raise stuff to the power of 2
 #define GAMECONTROL_SQUARE_POWER 2
-#define STATS_TEXT_SIZE 2
+
+// Stat display defines
+#define STATS_TEXT_SIZE 1.5
 #define TEXT_CURSOR_X 8
-#define TEXT_CURSOR_Y 5
+#define TEXT_CURSOR_Y 2
 
 // State messages
 #define INIT_ST_MSG "gameControl_init_st\n"
 #define WAIT_TOUCH_ST_MSG "gameControl_wait_touch_st\n"
 #define WAIT_RELEASE_ST_MSG "gameControl_wait_release_st\n"
-#define RELEASED_ST_MSG "gameControl_released_st\n"
 
 enum gameControl_st_t {
   init_st,
   wait_touch_st,
   wait_release_st,
-  released_st,
 };
 
 static enum gameControl_st_t currentState;
 
 // Draws or erases the stats given the state of bool draw
 void drawStats_helper(bool draw) {
-  printf("drawStats_helper: %d\n", draw);
   // Configure display text settings
   display_setTextColor(
       (draw) ? DISPLAY_WHITE : CONFIG_BACKGROUND_COLOR); // Make the text white.
@@ -117,9 +118,6 @@ void debugStatePrint_gameControl() {
     case wait_release_st:
       printf(WAIT_RELEASE_ST_MSG);
       break;
-    case released_st:
-      printf(RELEASED_ST_MSG);
-      break;
     default:
       printf("ERROR: Unaccounted gameControl state action.\n");
     }
@@ -127,7 +125,7 @@ void debugStatePrint_gameControl() {
 }
 
 // Tick the game control logic
-//
+
 // This function should tick the missiles, handle screen touches, collisions,
 // and updating statistics.
 void gameControl_tick() {
@@ -177,6 +175,7 @@ void gameControl_tick() {
       int16_t otherMissileLocation_y = missiles[j].y_current;
       int16_t otherMissileRadius = missiles[j].radius;
 
+      // Calculate whether the enemy missile is in the given missiles radius
       bool isInRadius =
           (((otherMissileLocation_y - enemyMissileLocation_y) *
             (otherMissileLocation_y - enemyMissileLocation_y)) +
@@ -185,12 +184,12 @@ void gameControl_tick() {
           otherMissileRadius * otherMissileRadius;
 
       if (isInRadius) {
-        printf("is in radius!\n\n");
         missile_trigger_explosion(&missiles[i]);
       }
 
       display_point_t planeLocation = plane_getXY();
 
+      // Calculate whether the plane is in the given missiles radius
       bool planeIsInRadius =
           (((otherMissileLocation_y - planeLocation.y) *
             (otherMissileLocation_y - planeLocation.y)) +
@@ -199,9 +198,42 @@ void gameControl_tick() {
           otherMissileRadius * otherMissileRadius;
 
       if (planeIsInRadius) {
-        // Increment impact here?
         plane_explode();
       }
+    }
+  }
+
+  // SPECIFICALLY TO SEE IF THE ONE MISSILE FROM PLANE COLLIDES
+  //   Check if missile i should explode, caused by an exploding missile j
+  for (uint16_t j = 0; j < CONFIG_MAX_TOTAL_MISSILES; j++) {
+    if (!missile_is_flying(&plane_missile[0])) {
+      continue;
+    }
+    if (!missile_is_exploding(&missiles[j])) {
+      continue;
+    }
+
+    // At this point, we know that the other missile is exploding and we can
+    // compare the location of the enemy missile with the radius of the
+    // explosion from the other missile.
+
+    int16_t otherMissileLocation_x = missiles[j].x_current;
+    int16_t otherMissileLocation_y = missiles[j].y_current;
+    int16_t otherMissileRadius = missiles[j].radius;
+
+    int16_t planeMissileLocation_X = plane_missile[0].x_current;
+    int16_t planeMissileLocation_y = plane_missile[0].y_current;
+
+    // Calculate whether the enemy missile is in the given missiles radius
+    bool isInRadius =
+        (((otherMissileLocation_y - planeMissileLocation_y) *
+          (otherMissileLocation_y - planeMissileLocation_y)) +
+         abs(otherMissileLocation_x - planeMissileLocation_X) *
+             abs(otherMissileLocation_x - planeMissileLocation_X)) <
+        otherMissileRadius * otherMissileRadius;
+
+    if (isInRadius) {
+      missile_trigger_explosion(&plane_missile[0]);
     }
   }
 
@@ -235,16 +267,20 @@ void gameControl_tick() {
   case init_st:
     currentState = wait_touch_st;
     break;
+
+  // Waiting state until the there is player input
   case wait_touch_st:
     if (touchscreen_get_status() == TOUCHSCREEN_PRESSED) {
       // Send to a state that waits for the player to let go of the
       // screen
-      printf("pressed with state: %d\n", touchscreen_get_status());
       currentState = wait_release_st;
     } else {
       currentState = wait_touch_st;
     }
     break;
+
+  // Launches a player missile at touch location given there are available
+  // missiles to launch
   case wait_release_st:
     // I was running into a weird issue where my touchscreen status was
     // skipping released and going straight to idle, so I just used this line
@@ -255,14 +291,9 @@ void gameControl_tick() {
 
       // Find the first instance of a player missile that is dead. If you find
       // one, we can assume that there is an available missile to fire.
-      printf("First player missile is: %d\n",
-             missile_is_dead(&player_missiles[CONFIG_MAX_ENEMY_MISSILES]));
       for (uint16_t i = 0; i < CONFIG_MAX_PLAYER_MISSILES; i++) {
-        printf("Yo: %d\n", &player_missiles[i]);
         if (missile_is_dead(&player_missiles[i])) {
           display_point_t touchPoint = touchscreen_get_location();
-          printf("Initializing missile at: %d, %d\n", touchPoint.x,
-                 touchPoint.y);
           missile_init_player(&player_missiles[i], touchPoint.x, touchPoint.y);
           shots_cnt++; // Increment the number of shots that the player has
                        // taken.
@@ -276,9 +307,6 @@ void gameControl_tick() {
     } else {
       currentState = wait_release_st;
     }
-    break;
-  case released_st:
-    currentState = wait_touch_st;
     break;
   default:
     printf("ERROR: Unaccounted state transition.\n");

@@ -12,20 +12,33 @@
 
 // in seconds
 #define PLANE_SPAWN_TIME 3
+
+// Defines for location of the plane for drawing and spawning
 #define PLANE_X_OFFSET_BACK 6
 #define PLANE_Y_OFFSET 4
 #define PLANE_X_OFFSET_FRONT 12
-
 #define PLANE_SPAWN_Y_OFFSET 60
 
 // Delcare plane stats
 int16_t x_current;
 int16_t y_current;
+
+// One one missile should fire each time the plane passes by
 bool missileFired;
+// Distance after which the plane should fire its missile
+uint32_t plane_missile_fire_dist;
 
 // While flying, this flag is used to indicate the plane should be removed
 bool explode_me;
 
+// Setup for timer to spawn in plane
+uint32_t wait_spawn_cnt = 0;
+uint32_t wait_num_ticks = 0;
+
+// Point to whatever the missile_pointer is pointing to.
+missile_t *plane_missile_pointer;
+
+// States for the plane state machine
 enum plane_st_t {
   init_st,
   wait_spawn_st,
@@ -33,12 +46,6 @@ enum plane_st_t {
 };
 
 static enum plane_st_t currentState;
-
-uint32_t wait_spawn_cnt = 0;
-uint32_t wait_num_ticks = 0;
-uint32_t plane_missile_fire_dist;
-
-missile_t *plane_missile_pointer;
 
 // Takes in draw to decided whether to draw or erase triangle based off of the
 // plane's current position.
@@ -154,7 +161,8 @@ void plane_tick() {
       break;
     }
 
-    if (x_current > 0 - PLANE_X_OFFSET_BACK) {
+    // If the plane has not gone offscreen
+    if (x_current > (0 - PLANE_X_OFFSET_BACK)) {
       drawPlane_helper(true);
 
       if (x_current < plane_missile_fire_dist && !missileFired) {
@@ -168,7 +176,7 @@ void plane_tick() {
       currentState = moving_st;
       break;
     } else {
-      printf("Plane moved offscreen\n");
+      // Plane moved offscreen
       currentState = wait_spawn_st;
       break;
     }
@@ -191,7 +199,7 @@ void plane_tick() {
   }
 }
 
-// Trigger the plane to expode
+// Enables the plane's explode condition
 void plane_explode() { explode_me = true; }
 
 // Get the XY location of the plane
