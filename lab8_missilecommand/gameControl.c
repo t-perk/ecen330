@@ -8,24 +8,33 @@
 #include "missile.h"
 #include "plane.h"
 #include "touchscreen.h"
+#include <stdbool.h>
 
 #include "gameControl.h"
 
 // Delcare one big array for all the missiles
-missile_t missiles[CONFIG_MAX_TOTAL_MISSILES];
+missile_t missiles[CONFIG_MAX_TOTAL_MISSILES]; // 11 total
 // Make a pointer that stores all the enemy missiles at the beginning of the
 // missiles array
-missile_t *enemy_missiles = &(missiles[0]);
+missile_t *enemy_missiles = &(missiles[0]); // 0-6
 // Make a pointer that stores all the player missiles after the end of the space
 // allocated for the enemy missiles
-missile_t *player_missiles = &(missiles[CONFIG_MAX_ENEMY_MISSILES]);
+missile_t *player_missiles = &(missiles[CONFIG_MAX_ENEMY_MISSILES]); // 7-10
 // Make a pointer that stores the plane missile after the end of the space
 // allocated for the plane missiles
-missile_t *plane_missile = &(missiles[CONFIG_MAX_PLAYER_MISSILES]);
+missile_t *plane_missile = &(missiles[CONFIG_MAX_TOTAL_MISSILES - 1]); // 11
+
+uint16_t impacted_cnt;
+uint16_t shots_cnt;
+uint16_t old_impacted_cnt;
+uint16_t old_shots_cnt;
 
 bool tickOddMissiles = true;
 
 #define GAMECONTROL_SQUARE_POWER 2
+#define STATS_TEXT_SIZE 2
+#define TEXT_CURSOR_X 8
+#define TEXT_CURSOR_Y 5
 
 // State messages
 #define INIT_ST_MSG "gameControl_init_st\n"
@@ -42,12 +51,36 @@ enum gameControl_st_t {
 
 static enum gameControl_st_t currentState;
 
+// Draws or erases the stats given the state of bool draw
+void drawStats_helper(bool draw) {
+  printf("drawStats_helper: %d\n", draw);
+  // Configure display text settings
+  display_setTextColor(
+      (draw) ? DISPLAY_WHITE : CONFIG_BACKGROUND_COLOR); // Make the text white.
+  display_setTextSize(STATS_TEXT_SIZE);                  // Resize the text.
+
+  char output_string[100];
+
+  // Set the cursor location and print to the LCD
+  display_setCursor(TEXT_CURSOR_X, TEXT_CURSOR_Y);
+  sprintf(output_string, "Shot: %d   Impacted: %d\n",
+          ((draw) ? shots_cnt : old_shots_cnt),
+          ((draw) ? impacted_cnt : old_impacted_cnt));
+  display_println(output_string);
+}
+
 // Initialize the game control logic
 // This function will initialize all missiles, stats, plane, etc.
 void gameControl_init() {
 
-  currentState = init_st;
   display_fillScreen(CONFIG_BACKGROUND_COLOR);
+
+  impacted_cnt = 0;
+  shots_cnt = 0;
+  old_impacted_cnt = 0;
+  old_shots_cnt = 0;
+
+  drawStats_helper(true);
 
   // Initialize missiles
   for (uint16_t i = 0; i < CONFIG_MAX_TOTAL_MISSILES; i++) {
@@ -55,6 +88,8 @@ void gameControl_init() {
   }
 
   plane_init(plane_missile);
+
+  currentState = init_st;
 }
 
 // This is a debug state print routine. It will print the names of the states
@@ -101,21 +136,19 @@ void gameControl_tick() {
 
   // Tick every other missile
 
+  for (uint16_t i = 0; i < CONFIG_MAX_TOTAL_MISSILES; i++) {
+    missile_t *lastMissile = &missiles[i];
+  }
+
   for (uint16_t i = (tickOddMissiles ? 0 : 1); i < CONFIG_MAX_TOTAL_MISSILES;
        i += 2) {
     missile_tick(&missiles[i]);
   }
+
   tickOddMissiles = !tickOddMissiles;
 
   // If enemy missile is dead, relaunch it (call init again)
   // Check for dead enemy missiles and re-initialize
-  for (uint16_t i = 0; i < CONFIG_MAX_ENEMY_MISSILES; i++) {
-    if (missile_is_dead(&enemy_missiles[i])) {
-      missile_init_enemy(&enemy_missiles[i]);
-    }
-  }
-
-  // Detect collisions
   for (uint16_t i = 0; i < CONFIG_MAX_ENEMY_MISSILES; i++) {
     if (missile_is_dead(&enemy_missiles[i])) {
       missile_init_enemy(&enemy_missiles[i]);
@@ -175,6 +208,25 @@ void gameControl_tick() {
   // Tick the plane state machine
   plane_tick();
 
+  for (uint16_t i = 0; i < CONFIG_MAX_TOTAL_MISSILES; i++) {
+    if (missiles[i].impacted == true) {
+      impacted_cnt++;
+      missiles[i].impacted = false;
+    }
+  }
+
+  // Update stats
+  // IF there was a change in the stats go through the draw process.
+  if (old_impacted_cnt != impacted_cnt || old_shots_cnt != shots_cnt) {
+    // Erase the old values.
+    drawStats_helper(false);
+    // Update the old to the new values
+    old_impacted_cnt = impacted_cnt;
+    old_shots_cnt = shots_cnt;
+    // Display the new values
+    drawStats_helper(true);
+  }
+
   // Used state machine logic to handle the touchscreen/player interaction.
   //  If touchscreen touched, launch player missile (if one is available)
 
@@ -194,8 +246,9 @@ void gameControl_tick() {
     }
     break;
   case wait_release_st:
-    // I was running into a weird issue where my touchscreen status was skipping
-    // released and going straight to idle, so I just used this line instead.
+    // I was running into a weird issue where my touchscreen status was
+    // skipping released and going straight to idle, so I just used this line
+    // instead.
     if (touchscreen_get_status() != TOUCHSCREEN_PRESSED) {
 
       // Launch player missile (if one is available)
@@ -211,6 +264,8 @@ void gameControl_tick() {
           printf("Initializing missile at: %d, %d\n", touchPoint.x,
                  touchPoint.y);
           missile_init_player(&player_missiles[i], touchPoint.x, touchPoint.y);
+          shots_cnt++; // Increment the number of shots that the player has
+                       // taken.
           break;
         }
       }

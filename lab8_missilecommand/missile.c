@@ -265,10 +265,18 @@ void missile_tick(missile_t *missile) {
 
     // Check to see if the missle has traveled far enough. If so, don't draw a
     // new one, but instead transition to another state
-    if (missile->length > missile->total_length || missile->explode_me) {
-      // It's close enough.
+    if (missile->length > missile->total_length) {
+      // It has reached it final destination.
       missile->currentState = explode_grow_st;
       missile->explode_me = true;
+
+      missile->impacted = true;
+
+    } else if (missile->explode_me) {
+      // Execute order 66
+      missile->currentState = explode_grow_st;
+      missile->explode_me = true;
+
     } else {
       // Not close enough, so go ahead and draw the line and stay in the same
       // state.

@@ -21,6 +21,7 @@
 // Delcare plane stats
 int16_t x_current;
 int16_t y_current;
+bool missileFired;
 
 // While flying, this flag is used to indicate the plane should be removed
 bool explode_me;
@@ -37,8 +38,7 @@ uint32_t wait_spawn_cnt = 0;
 uint32_t wait_num_ticks = 0;
 uint32_t plane_missile_fire_dist;
 
-missile_t plane_missiles[CONFIG_MAX_PLANE_MISSILES];
-// missile_t *plane_missile = &(missiles[CONFIG_MAX_PLANE_MISSILES]);
+missile_t *plane_missile_pointer;
 
 // Takes in draw to decided whether to draw or erase triangle based off of the
 // plane's current position.
@@ -63,14 +63,15 @@ void drawPlane_helper(bool draw) {
 // missile)
 void plane_init(missile_t *plane_missile) {
 
-  //   missiles[0] = plane_missile;
-  plane_missiles[0] = *plane_missile;
-  //   missiles[0].type = MISSILE_TYPE_PLANE;
+  plane_missile->type = MISSILE_TYPE_PLANE;
+  plane_missile_pointer = plane_missile;
 
   x_current = 0;
   y_current = 0;
   explode_me = false;
   plane_missile_fire_dist = 0;
+
+  missileFired = false;
 
   // Set current state
   currentState = init_st;
@@ -128,6 +129,7 @@ void plane_tick() {
       // spawnPlane on right-hand side
       x_current = DISPLAY_WIDTH + PLANE_X_OFFSET_FRONT;
       y_current = PLANE_SPAWN_Y_OFFSET;
+      missileFired = false;
 
       drawPlane_helper(true);
       // Choose a random x point at which the plane will fire it's missile
@@ -155,9 +157,12 @@ void plane_tick() {
     if (x_current > 0 - PLANE_X_OFFSET_BACK) {
       drawPlane_helper(true);
 
-      if (x_current < plane_missile_fire_dist) {
+      if (x_current < plane_missile_fire_dist && !missileFired) {
         // Fire missile
-        missile_init_plane(&plane_missiles[0], x_current, y_current);
+        missileFired = true;
+
+        missile_init_plane(&plane_missile_pointer[0], x_current, y_current);
+        // missile_init_plane($pl);
       }
 
       currentState = moving_st;
@@ -167,7 +172,6 @@ void plane_tick() {
       currentState = wait_spawn_st;
       break;
     }
-
     break;
   default:
     printf("ERROR: Unaccounted state transition.\n");
