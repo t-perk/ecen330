@@ -64,6 +64,9 @@ void drawStats_helper(bool draw) {
 
   // Set the cursor location and print to the LCD
   display_setCursor(TEXT_CURSOR_X, TEXT_CURSOR_Y);
+
+  // Format the stuff you want to print as a string so its compatible with the
+  // display_println function
   sprintf(output_string, "Shot: %d   Impacted: %d\n",
           ((draw) ? shots_cnt : old_shots_cnt),
           ((draw) ? impacted_cnt : old_impacted_cnt));
@@ -155,7 +158,11 @@ void gameControl_tick() {
 
   // Check if missile i should explode, caused by an exploding missile j
 
-  for (uint16_t i = 0; i < CONFIG_MAX_ENEMY_MISSILES; i++) {
+  for (uint16_t i = 0; i < CONFIG_MAX_TOTAL_MISSILES; i++) {
+    // Skip it in this loop if its a player missile.
+    if (missiles[i].type == 0) {
+      continue;
+    }
     int16_t enemyMissileLocation_x = missiles[i].x_current;
     int16_t enemyMissileLocation_y = missiles[i].y_current;
 
@@ -200,40 +207,6 @@ void gameControl_tick() {
       if (planeIsInRadius) {
         plane_explode();
       }
-    }
-  }
-
-  // SPECIFICALLY TO SEE IF THE ONE MISSILE FROM PLANE COLLIDES
-  //   Check if missile i should explode, caused by an exploding missile j
-  for (uint16_t j = 0; j < CONFIG_MAX_TOTAL_MISSILES; j++) {
-    if (!missile_is_flying(&plane_missile[0])) {
-      continue;
-    }
-    if (!missile_is_exploding(&missiles[j])) {
-      continue;
-    }
-
-    // At this point, we know that the other missile is exploding and we can
-    // compare the location of the enemy missile with the radius of the
-    // explosion from the other missile.
-
-    int16_t otherMissileLocation_x = missiles[j].x_current;
-    int16_t otherMissileLocation_y = missiles[j].y_current;
-    int16_t otherMissileRadius = missiles[j].radius;
-
-    int16_t planeMissileLocation_X = plane_missile[0].x_current;
-    int16_t planeMissileLocation_y = plane_missile[0].y_current;
-
-    // Calculate whether the enemy missile is in the given missiles radius
-    bool isInRadius =
-        (((otherMissileLocation_y - planeMissileLocation_y) *
-          (otherMissileLocation_y - planeMissileLocation_y)) +
-         abs(otherMissileLocation_x - planeMissileLocation_X) *
-             abs(otherMissileLocation_x - planeMissileLocation_X)) <
-        otherMissileRadius * otherMissileRadius;
-
-    if (isInRadius) {
-      missile_trigger_explosion(&plane_missile[0]);
     }
   }
 
