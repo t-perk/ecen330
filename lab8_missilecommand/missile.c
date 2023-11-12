@@ -262,17 +262,34 @@ void missile_tick(missile_t *missile) {
 
     // Check to see if the missle has traveled far enough. If so, don't draw a
     // new one, but instead transition to another state
-    if (missile->length > missile->total_length) {
+    if (missile->length > missile->total_length ||
+        missile->length >= DISPLAY_HEIGHT) {
       // It has reached it final destination.
-      missile->currentState = explode_grow_st;
-      missile->explode_me = true;
+      // If it's a player missile. Make it explode.
 
-      missile->impacted = true;
+      // If it's at the bottom of the screen don't make it explode, but
+      // incremement impact. If it's not at the bottom of the screen, make it
+      // explode.
 
+      if (missile->type == MISSILE_TYPE_PLAYER) {
+        missile->explode_me = true;
+        missile->currentState = explode_grow_st;
+        break;
+      } else {
+        // If it's not a player missile.
+        // If it's at the bottom of the screen don't make it explode, but
+        // incremement impact.
+        printf("Missile impacted\n");
+        // The issue is that its going to the dead_st where it's reinitialized
+        // before the stat can pickup that it's impacted.
+        missile->impacted = true;
+        missile->currentState = dead_st;
+        break;
+      }
     } else if (missile->explode_me) {
       // Execute order 66
-      missile->currentState = explode_grow_st;
       missile->explode_me = true;
+      missile->currentState = explode_grow_st;
 
     } else {
       // Not close enough, so go ahead and draw the line and stay in the same
@@ -311,8 +328,8 @@ void missile_tick(missile_t *missile) {
         missile->radius +
         (CONFIG_EXPLOSION_RADIUS_CHANGE_PER_TICK * MISSILE_SPEED_MULTIPLIER);
 
-    // If circle radius is beneath its max, draw the bigger circle. If not then
-    // transition states to explode_shrink_st
+    // If circle radius is beneath its max, draw the bigger circle. If not
+    // then transition states to explode_shrink_st
     if (missile->radius >= CONFIG_EXPLOSION_MAX_RADIUS) {
       missile->currentState = explode_shrink_st;
     } else {

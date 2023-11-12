@@ -148,14 +148,6 @@ void gameControl_tick() {
 
   tickOddMissiles = !tickOddMissiles;
 
-  // If enemy missile is dead, relaunch it (call init again)
-  // Check for dead enemy missiles and re-initialize
-  for (uint16_t i = 0; i < CONFIG_MAX_ENEMY_MISSILES; i++) {
-    if (missile_is_dead(&enemy_missiles[i])) {
-      missile_init_enemy(&enemy_missiles[i]);
-    }
-  }
-
   // Check if missile i should explode, caused by an exploding missile j
 
   for (uint16_t i = 0; i < CONFIG_MAX_TOTAL_MISSILES; i++) {
@@ -217,6 +209,16 @@ void gameControl_tick() {
     if (missiles[i].impacted == true) {
       impacted_cnt++;
       missiles[i].impacted = false;
+    }
+  }
+
+  // If enemy missile is dead, relaunch it (call init again) if it's impacted
+  // property hasn't already been registered.
+
+  // Check for dead enemy missiles and re-initialize
+  for (uint16_t i = 0; i < CONFIG_MAX_ENEMY_MISSILES; i++) {
+    if (missile_is_dead(&enemy_missiles[i])) {
+      missile_init_enemy(&enemy_missiles[i]);
     }
   }
 

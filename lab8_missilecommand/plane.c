@@ -11,7 +11,7 @@
 #define REMOVE_ST_MSG "plane_remove_st\n"
 
 // in seconds
-#define PLANE_SPAWN_TIME 3
+#define PLANE_SPAWN_TIME 5
 
 // Defines for location of the plane for drawing and spawning
 #define PLANE_X_OFFSET_BACK 6
