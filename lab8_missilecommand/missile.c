@@ -19,6 +19,8 @@
 #define MISSILE_PLAYER_MISSILE_SPAWN_CENTER DISPLAY_WIDTH * .5
 #define MISSILE_PLAYER_MISSILE_SPAWN_RIGHT DISPLAY_WIDTH * .75
 
+#define MISSILE_CLOSEST_DISTANCE_DEFAULT 500
+
 #define MISSILE_SQUARE_POWER 2
 
 // Currently set to 2 because each tick function inside of gameControl only
@@ -108,7 +110,7 @@ void missile_init_player(missile_t *missile, uint16_t x_dest, uint16_t y_dest) {
 
   // Default spawn location
   uint8_t chosenSpawnLocation_x = MISSILE_PLAYER_MISSILE_SPAWN_LEFT;
-  uint16_t closestDistance = 500; // TODO MAGIC NUMBER
+  uint16_t closestDistance = MISSILE_CLOSEST_DISTANCE_DEFAULT;
 
   // Find the closest spawn point
   // Loop through each of the three spawn points and see if it's the closest
@@ -164,7 +166,6 @@ void missile_init_player(missile_t *missile, uint16_t x_dest, uint16_t y_dest) {
 // location of the plane which will be used as the origin.  The destination can
 // be randomly chosed along the bottom of the screen.
 void missile_init_plane(missile_t *missile, int16_t plane_x, int16_t plane_y) {
-  printf("missile_init_plane\n");
 
   missile_init_helper(missile);
 
@@ -266,11 +267,6 @@ void missile_tick(missile_t *missile) {
         missile->length >= DISPLAY_HEIGHT) {
       // It has reached it final destination.
       // If it's a player missile. Make it explode.
-
-      // If it's at the bottom of the screen don't make it explode, but
-      // incremement impact. If it's not at the bottom of the screen, make it
-      // explode.
-
       if (missile->type == MISSILE_TYPE_PLAYER) {
         missile->explode_me = true;
         missile->currentState = explode_grow_st;
@@ -279,9 +275,6 @@ void missile_tick(missile_t *missile) {
         // If it's not a player missile.
         // If it's at the bottom of the screen don't make it explode, but
         // incremement impact.
-        printf("Missile impacted\n");
-        // The issue is that its going to the dead_st where it's reinitialized
-        // before the stat can pickup that it's impacted.
         missile->impacted = true;
         missile->currentState = dead_st;
         break;

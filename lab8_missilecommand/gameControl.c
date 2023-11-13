@@ -205,6 +205,8 @@ void gameControl_tick() {
   // Tick the plane state machine
   plane_tick();
 
+  // Updated the impacted count based on whether any missiles are impacted
+  // Note: It's important that we check this before re-initializing missiles
   for (uint16_t i = 0; i < CONFIG_MAX_TOTAL_MISSILES; i++) {
     if (missiles[i].impacted == true) {
       impacted_cnt++;
