@@ -127,6 +127,7 @@ void plane_tick() {
 
   // Handle state transitions
   switch (currentState) {
+    // Move to wait_spawn_st
   case init_st:
     currentState = wait_spawn_st;
     break;
@@ -147,6 +148,7 @@ void plane_tick() {
       currentState = wait_spawn_st;
     }
     break;
+    // Redraw the plane as necessary
   case moving_st:
 
     // Erase past position

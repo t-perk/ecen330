@@ -45,6 +45,9 @@ bool tickOddMissiles = true;
 #define WAIT_TOUCH_ST_MSG "gameControl_wait_touch_st\n"
 #define WAIT_RELEASE_ST_MSG "gameControl_wait_release_st\n"
 
+#define STRING_MAX_LENGTH 100
+
+// State vars
 enum gameControl_st_t {
   init_st,
   wait_touch_st,
@@ -60,7 +63,7 @@ void drawStats_helper(bool draw) {
       (draw) ? DISPLAY_WHITE : CONFIG_BACKGROUND_COLOR); // Make the text white.
   display_setTextSize(STATS_TEXT_SIZE);                  // Resize the text.
 
-  char output_string[100];
+  char output_string[STRING_MAX_LENGTH];
 
   // Set the cursor location and print to the LCD
   display_setCursor(TEXT_CURSOR_X, TEXT_CURSOR_Y);
@@ -136,11 +139,6 @@ void gameControl_tick() {
   // Do the "every tick" stuff
 
   // Tick every other missile
-
-  for (uint16_t i = 0; i < CONFIG_MAX_TOTAL_MISSILES; i++) {
-    missile_t *lastMissile = &missiles[i];
-  }
-
   for (uint16_t i = (tickOddMissiles ? 0 : 1); i < CONFIG_MAX_TOTAL_MISSILES;
        i += 2) {
     missile_tick(&missiles[i]);
@@ -182,6 +180,7 @@ void gameControl_tick() {
                abs(otherMissileLocation_x - enemyMissileLocation_x)) <
           otherMissileRadius * otherMissileRadius;
 
+      // If in radius, trigger explosion
       if (isInRadius) {
         missile_trigger_explosion(&missiles[i]);
       }

@@ -187,6 +187,7 @@ def get_files_to_copy_and_zip(lab):
         files.append((src_libs_path / "intervalTimer.c", dest_libs_path, False))
         files.append((src_lab_path / "missile.c", dest_lab_path, True))
         files.append((src_lab_path / "gameControl.c", dest_lab_path, True))
+        files.append((src_lab_path / "plane.c", dest_lab_path, True))
     elif lab == "lab8" or lab == "lab8m3":
         files.append((chk_lab_path / "drivers.cmake", dest_libs_path / "CMakeLists.txt", False))
         files.append((chk_lab_path / "cmake", dest_lab_path / "CMakeLists.txt", False))
