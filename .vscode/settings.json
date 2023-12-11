@@ -12,6 +12,7 @@
         "buttons.h": "c",
         "math.h": "c",
         "cmath": "c",
-        "gamecontrol.h": "c"
+        "gamecontrol.h": "c",
+        "display.h": "c"
     }
 }

@@ -18,11 +18,43 @@
 #define LASER_SQUARE_POWER 2
 #define ONE_OR_ZERO 2
 
+#define MAX_QUEUE_SIZE 10
+
 enum laser_st_t {
   init_st,   // Starts here. Will feed into the moving state
   moving_st, // laser traveling
   dead_st,   // signals that this laser can be reinitialized as a new laser
 };
+
+// Place a coordinate on the queue
+void on_queue(laser_t *laser, display_point_t point) {
+  printf("Point placed on the queue\n");
+  if (laser->laserQueue.size == MAX_QUEUE_SIZE) {
+    printf("Queue is full. Cannot enqueue.\n");
+    return;
+  }
+
+  // Moves the rear one step back
+  laser->laserQueue.rear = (laser->laserQueue.rear + 1) % MAX_QUEUE_SIZE;
+  // Sets the end of the queue equal to our point
+  laser->laserQueue.queue[laser->laserQueue.rear] = point;
+  // Increment size
+  laser->laserQueue.size++;
+}
+
+display_point_t off_queue(laser_t *laser) {
+  if (laser->laserQueue.size == 0) {
+    printf("Queue is empty. Cannot dequeue.\n");
+    display_point_t empty_point = {0, 0};
+    return empty_point;
+  }
+
+  display_point_t point = laser->laserQueue.queue[laser->laserQueue.front];
+  laser->laserQueue.front = (laser->laserQueue.front + 1) % MAX_QUEUE_SIZE;
+  laser->laserQueue.size--;
+
+  return point;
+}
 
 ////////// State Machine INIT Functions //////////
 
@@ -70,6 +102,22 @@ void laser_init_active(laser_t *laser) {
 
   laser->x_tail = laser->x_origin;
   laser->y_tail = laser->y_origin;
+
+  // Initialize the queue
+
+  // First point in the queue
+  laser->laserQueue.front = 0;
+  // Last point in the queue
+  laser->laserQueue.rear = -1;
+  // number of points
+  laser->laserQueue.size = CONFIG_LASER_SIZE;
+
+  display_point_t point1 = {laser->x_point, laser->y_point};
+
+  // Fill the queue with the points of origin
+  for (uint8_t i = 0; i < CONFIG_LASER_SIZE; i++) {
+    on_queue(laser, point1);
+  }
 
   laser->currentState = init_st;
 }
@@ -155,7 +203,19 @@ void laser_tick(laser_t *laser) {
       laser->y_point =
           laser->y_origin + percentage * (laser->y_dest - laser->y_origin);
 
-      // Add this point to the queue
+      display_point_t point1 = {laser->x_point, laser->y_point};
+
+      if (laser->laserQueue.size == MAX_QUEUE_SIZE) {
+        printf("Oh dang it was full\n");
+        // Need to pop before we add another one.
+        off_queue(laser);
+        on_queue(laser, point1);
+      }
+
+      display_point_t tailPoint =
+          laser->laserQueue.queue[laser->laserQueue.front];
+      laser->x_tail = tailPoint.x;
+      laser->y_tail = tailPoint.y;
 
       // Draw the new line
       display_drawLine(laser->x_tail, laser->y_tail, laser->x_point,

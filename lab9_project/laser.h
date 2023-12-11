@@ -1,8 +1,19 @@
 #ifndef LASER
 #define LASER
 
+#define MAX_QUEUE_SIZE 10
+
 #include <stdbool.h>
 #include <stdint.h>
+#include "display.h"
+
+// Create a struct to contain all the points in a laser.
+typedef struct {
+  display_point_t queue[MAX_QUEUE_SIZE];
+  int front;
+  int rear;
+  int size;
+} Queue;
 
 /* This struct contains all information about a laser */
 typedef struct {
@@ -32,6 +43,9 @@ typedef struct {
 
   // While traveling, this tracks the current length of the flight path
   double length;
+
+  // Declare the queue
+  Queue laserQueue;
 
 } laser_t;
 
