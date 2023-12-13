@@ -202,7 +202,7 @@ void gameControl_tick() {
     winCondition = true;
     drawWin(true);
   } else { // Ticked the lasers
-    // Tick every other missile
+
     for (uint16_t i = (tickOddLasers ? 0 : 1); i < CONFIG_MAX_LASERS; i += 2) {
       laser_tick(&lasers[i]);
     }
@@ -230,7 +230,8 @@ void gameControl_tick() {
 
       if ((pointToPlayer <= PLAYER_RADIUS * PLAYER_RADIUS) &&
           pointToPlayer > 0) {
-        printf("Laser hit player! PtP: %d\n", pointToPlayer);
+        printf("Laser hit player! PtP: %d, loc of player: %d, %d\n",
+               pointToPlayer, playerLocation.x, playerLocation.y);
         playerHit = true;
         display_drawLine(testPoint.x, testPoint.y, playerLocation.x,
                          playerLocation.y, DISPLAY_GREEN);

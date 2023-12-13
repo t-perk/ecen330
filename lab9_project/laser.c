@@ -64,7 +64,7 @@ void laser_init_dead(laser_t *laser) {}
 // of the laser.
 void laser_init_active(laser_t *laser, double speedVal) {
   laser->length = 0;
-  laser->speed = speedVal;
+  laser->speed = 2;
 
   // Choose which of the four sides the lase
 
@@ -85,9 +85,12 @@ void laser_init_active(laser_t *laser, double speedVal) {
   // Set the laser destination to some point on the opposite side
   uint16_t rand_y_dest = ((laser->up_down) ? DISPLAY_HEIGHT : 0);
   uint16_t rand_x_dest = rand() % DISPLAY_WIDTH;
+  printf("x_dest%d\n", rand_x_dest);
 
   laser->x_dest = rand_x_dest;
   laser->y_dest = rand_y_dest;
+
+  printf("x_dest2 %d\n", rand_x_dest);
 
   // printf("up_down is at: %d\n", laser->up_down);
   // printf("Displaying laser dest: (%d, %d)\n", rand_x_dest, rand_y_dest);
@@ -103,6 +106,8 @@ void laser_init_active(laser_t *laser, double speedVal) {
 
   laser->x_tail = laser->x_origin;
   laser->y_tail = laser->y_origin;
+
+  printf("Address of pointer: %p\n", (void *)laser);
 
   // Initialize the queue
 
@@ -124,6 +129,12 @@ void laser_init_active(laser_t *laser, double speedVal) {
   }
 
   laser->currentState = init_st;
+
+  printf(
+      "INIT - Laser characteristics:\n length:%d\n total_length:%d\n speed%d\n "
+      "xcurrent: %d\n xdest: %d\n address: %p\n\n",
+      laser->length, laser->total_length, laser->speed, laser->x_point,
+      laser->x_dest, (void *)laser);
 }
 
 // Interesting case where it pegged a collision because the player was in
@@ -161,6 +172,11 @@ void debugStatePrint_Laser(laser_t *laser) {
 
 ////////// State Machine TICK Function //////////
 void laser_tick(laser_t *laser) {
+  printf("Laser characteristics:\n length:%d\n total_length:%d\n speed%d\n "
+         "xcurrent%d\n xdest%d\n address: %p\n\n",
+         laser->length, laser->total_length, laser->speed, laser->x_point,
+         laser->x_dest, (void *)laser);
+
   // debugStatePrint_Laser(laser);
 
   // Handle state transitions
@@ -176,6 +192,8 @@ void laser_tick(laser_t *laser) {
     display_drawLine(laser->x_tail, laser->y_tail, laser->x_point,
                      laser->y_point, CONFIG_BACKGROUND_COLOR);
 
+    // printf("pre - length %d, t_length: %d speed: %d\n", laser->length,
+    //        laser->total_length, laser->speed);
     laser->length = laser->length + (CONFIG_LASER_DISTANCE_PER_TICK *
                                      laser->speed); // SPEED HERE
 
@@ -184,16 +202,19 @@ void laser_tick(laser_t *laser) {
     //  its completed path. If so, move to dead state. If not, update
     //  the line.
     // x_current = x_origin + percentage * (x_dest – x_origin)
-    double percentage = laser->length / (double)laser->total_length;
+    // printf("pre per total_length%d, length: %d\n", laser->total_length,
+    //        laser->length);
+    double percentage = laser->length / laser->total_length;
+    // printf("percentage: %d\n", percentage);
     double epsilon = 0.01; // Might need to finagle this around
 
     // Check to see if the missle has traveled far enough. If so, don't draw a
     // new one, but instead transition to another state
 
-    printf("Traveling progress. length: %d\ntotal_length: %d\n for laser: "
-           "%p\n\n\n",
-           laser->length, laser->total_length, laser);
-    if ((laser->length > laser->total_length) && (laser->total_length > 0)) {
+    // printf("Traveling progress. length: %d\ntotal_length: %d\n for laser: "
+    //        "%p\n\n\n",
+    //        laser->length, laser->total_length, laser);
+    if ((laser->length >= laser->total_length) && (laser->total_length > 0)) {
 
       // TODO for some reason I was getting a bug where my lasers starting from
       // the top going down would despawn before reaching the end.
