@@ -210,37 +210,50 @@ void gameControl_tick() {
     tickOddLasers = !tickOddLasers;
   }
 
+  /*
+  To calculate a collision between the line segment and a circle:
+    - Find the line from the circle that goes perpendicular to the laser line
+    segment
+    - If the distance between the center circle to the line segment is less than
+  the radius, you’ve got a collision.
+  */
+
   // Check for laser collision with the player
   // Loop through each laser
   bool playerHit = false;
   for (uint16_t i = 0; i < CONFIG_MAX_LASERS; i++) {
+    double segmentLength = sqrt(((lasers[i].x_point - lasers[i].x_tail) *
+                                 (lasers[i].x_point - lasers[i].x_tail)) +
+                                ((lasers[i].y_point - lasers[i].y_tail) *
+                                 (lasers[i].y_point - lasers[i].y_tail)));
 
-    // Loop through each segment of the laser
-    for (uint16_t j = 0; j < CONFIG_LASER_SIZE; j++) {
-      display_point_t testPoint = lasers[i].laserQueue.queue[j];
-      // printf("CollisionTest: %d, %d\n", testPoint_x, testPoint_y);
-      // printf("i: %d, j: %d\n", i, j);
+    // SegmentLength sits at around 20
 
-      uint16_t pointToPlayer = (((playerLocation.y - testPoint.y) *
-                                 (playerLocation.y - testPoint.y)) +
-                                ((playerLocation.x - testPoint.x) *
-                                 (playerLocation.x - testPoint.x)));
+    double distanceToLine =
+        fabs((lasers[i].y_tail - lasers[i].y_point) * playerLocation.x -
+             (lasers[i].x_tail - lasers[i].x_point) * playerLocation.y +
+             lasers[i].x_tail * lasers[i].y_point -
+             lasers[i].y_tail * lasers[i].x_point) /
+        segmentLength;
 
-      // printf("Point # %d distance to player: %d\n", j, pointToPlayer);
+    double distanceToCenter = sqrt(
+        ((lasers[i].x_point + lasers[i].x_tail) / TWO_MOD - playerLocation.x) *
+            ((lasers[i].x_point + lasers[i].x_tail) / TWO_MOD -
+             playerLocation.x) +
+        ((lasers[i].y_point + lasers[i].y_tail) / TWO_MOD - playerLocation.y) *
+            ((lasers[i].y_point + lasers[i].y_tail) / TWO_MOD -
+             playerLocation.y));
 
-      if ((pointToPlayer <= PLAYER_RADIUS * PLAYER_RADIUS) &&
-          pointToPlayer > 0) {
-        printf("Laser hit player! PtP: %d, loc of player: %d, %d\n",
-               pointToPlayer, playerLocation.x, playerLocation.y);
-        playerHit = true;
-        display_drawLine(testPoint.x, testPoint.y, playerLocation.x,
-                         playerLocation.y, DISPLAY_GREEN);
-      }
+    // Check if the circle is within half of the length of the line segment
+    if (distanceToLine <= CONFIG_RADIUS_ANSWERKEY &&
+        distanceToCenter <= (segmentLength / TWO_MOD)) {
+      // printf("Collision detected!\n");
+      playerHit = true;
     }
   }
 
-  // The player loses when the player has been hit by a laser and has not
-  // already won.
+  // The player loses when the player has been hit by a
+  //     laser and has not already won.
   if (playerHit && !winCondition) {
     loseCondition = true;
     drawLose(true);
@@ -331,7 +344,6 @@ void gameControl_tick() {
       display_drawCircle(playerLocation.x, playerLocation.y, PLAYER_RADIUS,
                          CONFIG_BACKGROUND_COLOR);
 
-      //**TODO** If the player is jittering back and forth a bit, you might
       // consider adding some buffer space
       // Increment player location x coord
       if (playerLocation.x > targetPlayerPosition.x) {

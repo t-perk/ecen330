@@ -7,14 +7,6 @@
 #include <stdint.h>
 #include "display.h"
 
-// Create a struct to contain all the points in a laser.
-typedef struct {
-  display_point_t queue[MAX_QUEUE_SIZE];
-  int front;
-  int rear;
-  int size;
-} Queue;
-
 /* This struct contains all information about a laser */
 typedef struct {
   // Current state (the 'enum' will be defined in your laser.c file, so it's
@@ -47,8 +39,9 @@ typedef struct {
   //Changing value based on the score
   double speed;
 
-  // Declare the queue
-  Queue laserQueue;
+  double unit_vector;
+  double x_unit_vector;
+  double y_unit_vector;
 
 } laser_t;
 
@@ -65,9 +58,6 @@ void laser_tick(laser_t *laser);
 
 // Return whether the given laser is dead.
 bool laser_is_dead(laser_t *laser);
-
-// Return whether the given laser is flying.
-bool laser_is_traveling(laser_t *laser);
 
 void incrementSpeed();
 
