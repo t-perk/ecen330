@@ -19,8 +19,6 @@
 #define LASER_SQUARE_POWER 2
 #define ONE_OR_ZERO 2
 
-#define MAX_QUEUE_SIZE 10
-
 enum laser_st_t {
   init_st,   // Starts here. Will feed into the moving state
   moving_st, // laser traveling
@@ -98,7 +96,7 @@ void laser_init_active(laser_t *laser, double speedVal) {
   laser->total_length =
       (int)sqrt(pow((laser->y_dest - laser->y_origin), LASER_SQUARE_POWER) +
                 pow((laser->x_dest - laser->x_origin), LASER_SQUARE_POWER));
-  // printf("total length is %d\n", laser->total_length);
+  printf("total length on spawn is is %d\n", laser->total_length);
 
   laser->x_point = laser->x_origin;
   laser->y_point = laser->y_origin;
@@ -119,11 +117,17 @@ void laser_init_active(laser_t *laser, double speedVal) {
 
   // Fill the queue with the points of origin
   for (uint8_t i = 0; i < CONFIG_LASER_SIZE; i++) {
-    on_queue(laser, point1);
+    if (laser->laserQueue.size == MAX_QUEUE_SIZE) {
+      off_queue(laser);
+      on_queue(laser, point1);
+    }
   }
 
   laser->currentState = init_st;
 }
+
+// Interesting case where it pegged a collision because the player was in
+// between where the missile spawned and where it wanted to go.
 
 // This is a debug state print routine. It will print the names of the states
 // each time tick() is called. It only prints states if they are different than
@@ -157,7 +161,7 @@ void debugStatePrint_Laser(laser_t *laser) {
 
 ////////// State Machine TICK Function //////////
 void laser_tick(laser_t *laser) {
-  debugStatePrint_Laser(laser);
+  // debugStatePrint_Laser(laser);
 
   // Handle state transitions
   switch (laser->currentState) {
@@ -186,7 +190,10 @@ void laser_tick(laser_t *laser) {
     // Check to see if the missle has traveled far enough. If so, don't draw a
     // new one, but instead transition to another state
 
-    if (laser->length > laser->total_length) {
+    printf("Traveling progress. length: %d\ntotal_length: %d\n for laser: "
+           "%p\n\n\n",
+           laser->length, laser->total_length, laser);
+    if ((laser->length > laser->total_length) && (laser->total_length > 0)) {
 
       // TODO for some reason I was getting a bug where my lasers starting from
       // the top going down would despawn before reaching the end.
@@ -210,7 +217,7 @@ void laser_tick(laser_t *laser) {
       display_point_t point1 = {laser->x_point, laser->y_point};
 
       if (laser->laserQueue.size == MAX_QUEUE_SIZE) {
-        printf("Oh dang it was full\n");
+        // printf("Oh dang it was full\n");
         // Need to pop before we add another one.
         off_queue(laser);
         on_queue(laser, point1);
@@ -224,8 +231,8 @@ void laser_tick(laser_t *laser) {
       // Draw the new line
       display_drawLine(laser->x_tail, laser->y_tail, laser->x_point,
                        laser->y_point, CONFIG_COLOR_LASER);
-      printf("Drawing new line from (%d,%d) to (%d, %d)\n", laser->x_tail,
-             laser->y_tail, laser->x_point, laser->y_point);
+      // printf("Drawing new line from (%d,%d) to (%d, %d)\n", laser->x_tail,
+      //        laser->y_tail, laser->x_point, laser->y_point);
 
       laser->currentState = moving_st;
     }
@@ -249,6 +256,15 @@ void laser_tick(laser_t *laser) {
     // Stay in the dead_st until you are reinitialized
   case dead_st:
     laser->currentState = dead_st;
+    display_point_t point1 = {laser->x_point, laser->y_point};
+
+    for (uint8_t i = 0; i < CONFIG_LASER_SIZE; i++) {
+      if (laser->laserQueue.size == MAX_QUEUE_SIZE) {
+        off_queue(laser);
+        on_queue(laser, point1);
+      }
+    }
+
     break;
   default:
     printf("ERROR: Unaccounted state transition.\n");

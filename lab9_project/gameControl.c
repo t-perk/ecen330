@@ -182,7 +182,9 @@ void debugStatePrint_gameControl() {
 // and updating statistics.
 void gameControl_tick() {
 
-  debugStatePrint_gameControl();
+  // debugStatePrint_gameControl();
+  // Update stats to keep a clean look
+  drawStats_helper(true);
 
   // Don't do anything if there player has lost
   if (loseCondition) {
@@ -221,13 +223,14 @@ void gameControl_tick() {
 
       uint16_t pointToPlayer = (((playerLocation.y - testPoint.y) *
                                  (playerLocation.y - testPoint.y)) +
-                                abs(playerLocation.x - testPoint.x) *
-                                    abs(playerLocation.x - testPoint.x));
+                                ((playerLocation.x - testPoint.x) *
+                                 (playerLocation.x - testPoint.x)));
 
       // printf("Point # %d distance to player: %d\n", j, pointToPlayer);
 
-      if (pointToPlayer <= PLAYER_RADIUS * PLAYER_RADIUS) {
-        printf("The laser hit the player!\n");
+      if ((pointToPlayer <= PLAYER_RADIUS * PLAYER_RADIUS) &&
+          pointToPlayer > 0) {
+        printf("Laser hit player! PtP: %d\n", pointToPlayer);
         playerHit = true;
         display_drawLine(testPoint.x, testPoint.y, playerLocation.x,
                          playerLocation.y, DISPLAY_GREEN);

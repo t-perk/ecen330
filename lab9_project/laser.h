@@ -1,7 +1,7 @@
 #ifndef LASER
 #define LASER
 
-#define MAX_QUEUE_SIZE 10
+#define MAX_QUEUE_SIZE 5//10
 
 #include <stdbool.h>
 #include <stdint.h>
