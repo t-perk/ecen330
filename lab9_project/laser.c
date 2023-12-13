@@ -4,6 +4,7 @@
 #include "xil_io.h"
 #include "xparameters.h"
 
+#include "gameControl.h"
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -28,7 +29,7 @@ enum laser_st_t {
 
 // Place a coordinate on the queue
 void on_queue(laser_t *laser, display_point_t point) {
-  printf("Point placed on the queue\n");
+  // printf("Point placed on the queue\n");
   if (laser->laserQueue.size == MAX_QUEUE_SIZE) {
     printf("Queue is full. Cannot enqueue.\n");
     return;
@@ -63,8 +64,9 @@ void laser_init_dead(laser_t *laser) {}
 
 // Initialize the laser.  This will randomly choose the origin and destination
 // of the laser.
-void laser_init_active(laser_t *laser) {
+void laser_init_active(laser_t *laser, double speedVal) {
   laser->length = 0;
+  laser->speed = speedVal;
 
   // Choose which of the four sides the lase
 
@@ -78,8 +80,9 @@ void laser_init_active(laser_t *laser) {
   laser->x_origin = rand_x_origin;
   laser->y_origin = rand_y_origin;
 
-  printf("up_down is at: %d\n", laser->up_down);
-  printf("Displaying laser origin: (%d, %d)\n", rand_x_origin, rand_y_origin);
+  // printf("up_down is at: %d\n", laser->up_down);
+  // printf("Displaying laser origin: (%d, %d)\n", rand_x_origin,
+  // rand_y_origin);
 
   // Set the laser destination to some point on the opposite side
   uint16_t rand_y_dest = ((laser->up_down) ? DISPLAY_HEIGHT : 0);
@@ -88,14 +91,14 @@ void laser_init_active(laser_t *laser) {
   laser->x_dest = rand_x_dest;
   laser->y_dest = rand_y_dest;
 
-  printf("up_down is at: %d\n", laser->up_down);
-  printf("Displaying laser dest: (%d, %d)\n", rand_x_dest, rand_y_dest);
+  // printf("up_down is at: %d\n", laser->up_down);
+  // printf("Displaying laser dest: (%d, %d)\n", rand_x_dest, rand_y_dest);
 
   // Update total_length
   laser->total_length =
       (int)sqrt(pow((laser->y_dest - laser->y_origin), LASER_SQUARE_POWER) +
                 pow((laser->x_dest - laser->x_origin), LASER_SQUARE_POWER));
-  printf("total length is %d\n", laser->total_length);
+  // printf("total length is %d\n", laser->total_length);
 
   laser->x_point = laser->x_origin;
   laser->y_point = laser->y_origin;
@@ -169,7 +172,8 @@ void laser_tick(laser_t *laser) {
     display_drawLine(laser->x_tail, laser->y_tail, laser->x_point,
                      laser->y_point, CONFIG_BACKGROUND_COLOR);
 
-    laser->length = laser->length + (CONFIG_LASER_DISTANCE_PER_TICK * 2);
+    laser->length = laser->length + (CONFIG_LASER_DISTANCE_PER_TICK *
+                                     laser->speed); // SPEED HERE
 
     //  Calculate the new x_current and y_current given the speed at which
     //  the laser is moving. Then see if the new length is close enough to

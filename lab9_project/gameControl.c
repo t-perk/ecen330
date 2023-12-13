@@ -11,17 +11,14 @@
 
 #include "gameControl.h"
 
-// Delcare one big array for all the lasers
-laser_t lasers[CONFIG_MAX_LASERS];
-
 // State messages
 #define INIT_ST_MSG "gameControl_init_st\n"
 #define WAIT_TOUCH_ST_MSG "gameControl_wait_touch_st\n"
 #define WAIT_RELEASE_ST_MSG "gameControl_wait_release_st\n"
 
 // Player defines
-#define PLAYER_SIZE_OFFSET 6
-#define PLAYER_SIZE 12
+#define PLAYER_RADIUS 6
+
 #define TWO_MOD 2
 
 // Stat display defines
@@ -34,12 +31,19 @@ laser_t lasers[CONFIG_MAX_LASERS];
 #define WIN_TEXT_CURSOR_X 30
 #define WIN_TEXT_CURSOR_Y 100
 
+#define LOSE_TEXT_SIZE 6
+#define LOSE_TEXT_CURSOR_X 20
+#define LOSE_TEST_CURSOR_Y 100
+
 // State vars
 enum gameControl_st_t {
   init_st,
   wait_touch_st,
   wait_release_st,
 };
+
+// Delcare one big array for all the lasers
+laser_t lasers[CONFIG_MAX_LASERS];
 
 // Player variables
 display_point_t playerLocation;
@@ -49,7 +53,13 @@ uint8_t score;
 bool answerKeyActive;
 display_point_t answerKeyLocation;
 bool winCondition;
+bool loseCondition;
 bool tickOddLasers = true;
+double laserSpeed = CONFIG_LASER_DEFAULT_SPEED_MULTIPLIER;
+
+// Declare variables
+uint32_t lose_reset_delay = 0;
+uint32_t delay_num_ticks = 0;
 
 static enum gameControl_st_t currentState;
 
@@ -66,6 +76,22 @@ void drawWin(bool draw) {
   // Format the stuff you want to print as a string so its compatible with the
   // display_println function
   sprintf(output_string, "YOU WIN\n");
+  display_println(output_string);
+}
+
+void drawLose(bool draw) {
+  // Configure display text settings
+  display_setTextColor((draw) ? DISPLAY_RED : CONFIG_BACKGROUND_COLOR);
+  display_setTextSize(LOSE_TEXT_SIZE); // Resize the text.
+
+  char output_string[STRING_MAX_LENGTH];
+
+  // Set the cursor location and print to the LCD
+  display_setCursor(LOSE_TEXT_CURSOR_X, LOSE_TEST_CURSOR_Y);
+
+  // Format the stuff you want to print as a string so its compatible with the
+  // display_println function
+  sprintf(output_string, "YOU LOSE\n");
   display_println(output_string);
 }
 
@@ -95,18 +121,25 @@ void gameControl_init() {
   playerLocation.x = DISPLAY_WIDTH / TWO_MOD;
   playerLocation.y = DISPLAY_HEIGHT / TWO_MOD;
 
-  display_drawRect(playerLocation.x - PLAYER_SIZE_OFFSET,
-                   playerLocation.y + PLAYER_SIZE_OFFSET, PLAYER_SIZE,
-                   PLAYER_SIZE, CONFIG_COLOR_PLAYER);
+  display_drawCircle(playerLocation.x, playerLocation.y, PLAYER_RADIUS,
+                     CONFIG_COLOR_PLAYER);
 
   score = 0;
   drawStats_helper(true);
   answerKeyActive = false;
   winCondition = false;
+  loseCondition = false;
+
+  // Initialize values
+  lose_reset_delay = 0;
+
+  // Setup number of ticks needed to enter super speedy fast update mode.
+  // Vrooooooooooom
+  delay_num_ticks = CONFIG_LOSE_RESET_TIME / CONFIG_GAME_TIMER_PERIOD;
 
   // Initialize lasers
   for (uint16_t i = 0; i < CONFIG_MAX_LASERS; i++) {
-    laser_init_active(&lasers[i]);
+    laser_init_active(&lasers[i], CONFIG_LASER_DEFAULT_SPEED_MULTIPLIER);
   }
 
   currentState = init_st;
@@ -151,8 +184,19 @@ void gameControl_tick() {
 
   debugStatePrint_gameControl();
 
+  // Don't do anything if there player has lost
+  if (loseCondition) {
+    // Wait for a while, then reset everything
+    if (lose_reset_delay == delay_num_ticks) {
+      gameControl_init();
+    } else {
+      lose_reset_delay++;
+    }
+    return;
+  }
+
   // Check for game win condition
-  if (score >= 10 && !winCondition) {
+  if (score >= 10 && !winCondition && !loseCondition) {
     winCondition = true;
     drawWin(true);
   } else { // Ticked the lasers
@@ -165,6 +209,38 @@ void gameControl_tick() {
   }
 
   // Check for laser collision with the player
+  // Loop through each laser
+  bool playerHit = false;
+  for (uint16_t i = 0; i < CONFIG_MAX_LASERS; i++) {
+
+    // Loop through each segment of the laser
+    for (uint16_t j = 0; j < CONFIG_LASER_SIZE; j++) {
+      display_point_t testPoint = lasers[i].laserQueue.queue[j];
+      // printf("CollisionTest: %d, %d\n", testPoint_x, testPoint_y);
+      // printf("i: %d, j: %d\n", i, j);
+
+      uint16_t pointToPlayer = (((playerLocation.y - testPoint.y) *
+                                 (playerLocation.y - testPoint.y)) +
+                                abs(playerLocation.x - testPoint.x) *
+                                    abs(playerLocation.x - testPoint.x));
+
+      // printf("Point # %d distance to player: %d\n", j, pointToPlayer);
+
+      if (pointToPlayer <= PLAYER_RADIUS * PLAYER_RADIUS) {
+        printf("The laser hit the player!\n");
+        playerHit = true;
+        display_drawLine(testPoint.x, testPoint.y, playerLocation.x,
+                         playerLocation.y, DISPLAY_GREEN);
+      }
+    }
+  }
+
+  // The player loses when the player has been hit by a laser and has not
+  // already won.
+  if (playerHit && !winCondition) {
+    loseCondition = true;
+    drawLose(true);
+  }
 
   // Check for player collision with answer key piece
   // Update location of the newest answer key piece if the previous
@@ -186,6 +262,7 @@ void gameControl_tick() {
       // Increment score and update stats
       drawStats_helper(false);
       score++;
+      laserSpeed = laserSpeed + CONFIG_LASER_SPEED_MULTIPLIER_PER_SCORE;
       drawStats_helper(true);
       answerKeyActive = false;
     }
@@ -205,7 +282,7 @@ void gameControl_tick() {
   // Check for dead lasers and re-initialize
   for (uint16_t i = 0; i < CONFIG_MAX_LASERS; i++) {
     if (laser_is_dead(&lasers[i])) {
-      laser_init_active(&lasers[i]);
+      laser_init_active(&lasers[i], laserSpeed);
     }
   }
 
@@ -247,9 +324,8 @@ void gameControl_tick() {
 
       // Increment the location of the player to go closer to the location.
       // Erase player
-      display_drawRect(playerLocation.x - PLAYER_SIZE_OFFSET,
-                       playerLocation.y + PLAYER_SIZE_OFFSET, PLAYER_SIZE,
-                       PLAYER_SIZE, CONFIG_BACKGROUND_COLOR);
+      display_drawCircle(playerLocation.x, playerLocation.y, PLAYER_RADIUS,
+                         CONFIG_BACKGROUND_COLOR);
 
       //**TODO** If the player is jittering back and forth a bit, you might
       // consider adding some buffer space
@@ -270,9 +346,8 @@ void gameControl_tick() {
       }
 
       // Draw player
-      display_drawRect(playerLocation.x - PLAYER_SIZE_OFFSET,
-                       playerLocation.y + PLAYER_SIZE_OFFSET, PLAYER_SIZE,
-                       PLAYER_SIZE, CONFIG_COLOR_PLAYER);
+      display_drawCircle(playerLocation.x, playerLocation.y, PLAYER_RADIUS,
+                         CONFIG_COLOR_PLAYER);
 
       currentState = wait_release_st;
     }

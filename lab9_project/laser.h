@@ -44,6 +44,9 @@ typedef struct {
   // While traveling, this tracks the current length of the flight path
   double length;
 
+  //Changing value based on the score
+  double speed;
+
   // Declare the queue
   Queue laserQueue;
 
@@ -55,7 +58,7 @@ typedef struct {
 void laser_init_dead(laser_t *laser);
 
 // Initialize the laser.  This will randomly choose the origin and destination of the laser.
-void laser_init_active(laser_t *laser);
+void laser_init_active(laser_t *laser, double speedVal);
 
 ////////// State Machine TICK Function //////////
 void laser_tick(laser_t *laser);
@@ -65,5 +68,7 @@ bool laser_is_dead(laser_t *laser);
 
 // Return whether the given laser is flying.
 bool laser_is_traveling(laser_t *laser);
+
+void incrementSpeed();
 
 #endif /* LASER */
